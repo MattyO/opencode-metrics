@@ -3,6 +3,7 @@ import { resourceFromAttributes } from '@opentelemetry/resources'
 import { BasicTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import { Span } from '@opentelemetry/api'
+import { createSelectors } from '@/helpers/store'
 
 interface SpanEntry {
   sessionName: string
@@ -27,7 +28,7 @@ interface SpanStore {
   replaceProvider: (resourceAttrs: ProviderAttrs, exporter: OTLPTraceExporter, maxQueueSize?: number, maxExportBatchSize?: number, exportTimeoutMillis?: number) => Promise<void>
 }
 
-export const useSpanStore = createStore<SpanStore>((set, get) => ({
+const baseStore = createStore<SpanStore>((set, get) => ({
   spans: [],
   provider: undefined,
   exporter: undefined,
@@ -87,3 +88,5 @@ export const useSpanStore = createStore<SpanStore>((set, get) => ({
     set({ provider: newProvider, exporter: newExporter })
   },
 }))
+
+export const useSpanStore = createSelectors(baseStore, ['spans', 'provider'])
