@@ -25,29 +25,30 @@ describe('eventListener', () => {
       { type: 'session.test', data: { key: 'val1' } },
       { type: 'session.test', data: { key: 'val2' } },
     ]
-    const mockCtx = {
-      event: {
-        subscribe: rs.fn().mockReturnValue((async function* () {
-          for (const e of events) yield e
-        })()),
-      },
-    }
-
+    const {yieldItem, stopExecution, subscribeMock} = asyncGeneratorMock()
     const onEvent = rs.fn()
+
     const controller = eventListener({
       types: ['session.test'],
       onEvent,
       onError: rs.fn(),
-      ctx: mockCtx,
+      ctx: {
+        event: {
+          subscribe: subscribeMock,
+        },
+      },
     })
 
-    await new Promise((r) => setTimeout(r, 50))
+    events.forEach(event=> {
+      yieldItem(event)
+
+    });
+
+    await withTimeout( stopExecution(), 5000)
 
     expect(onEvent).toHaveBeenCalledTimes(2)
     expect(onEvent).toHaveBeenCalledWith(events[0])
     expect(onEvent).toHaveBeenCalledWith(events[1])
-
-    controller.abort()
   })
 
   it('should call onError when subscribe throws (but not AbortError)', async () => {
@@ -182,17 +183,9 @@ describe('eventListener', () => {
 
     });
 
-    //await stopExecution()
 
     await withTimeout( stopExecution(), 5000)
     expect(onEvent).toHaveBeenCalledTimes(2)
-
-     //let wascalled = false
-     //await withTimeout( onEmpty( ()=> {
-     //     expect(onEvent).toHaveBeenCalledTimes(2)
-     // }), 5000)
-     // expect(onEvent).toHaveBeenCalledTimes(2)
-
 
   })
 })
