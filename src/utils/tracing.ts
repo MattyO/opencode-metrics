@@ -1,4 +1,5 @@
 import { Span, trace, context } from '@opentelemetry/api'
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import { TracingOptions } from '@/types/tracing'
 import { debug } from '@/utils/plugin'
 import { useSpanStore } from '@/store/spanStore'
@@ -31,7 +32,9 @@ export function setupProvider(
 
     debug('[opencode-tracing] Creating new OTel provider')
 
-    const exporter = new (store.use.exporter()?.constructor as new (options: { url: string }) => typeof store.use.exporter)({
+    const existingExporter = store.use.exporter()
+    const ExporterCtor = existingExporter?.constructor ?? OTLPTraceExporter
+    const exporter = new ExporterCtor({
       url: endpoint,
     })
 

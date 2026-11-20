@@ -56,23 +56,27 @@ export function eventListener(options: EventListenerOptions): AbortController {
   return controller
 }
 
-export function eventListenerPair(EventListenerPairOptions ){
-    eventInfoList =  [{types: startTypes ,onEvent: startEvent, onError: onError},
-                    {types: endTypes, onEvent: endEvent, onError: onError}]
-    return
-        eventInfoList.map( (eventInfo) => {
-          eventListener({
-            types: eventInfo.types
-            ctx,
-            onEvent: eventInfo.onEvent,
-            onError: onError,
-          }),
-        })
+export function eventListenerPair(options: EventListenerPairOptions): AbortController[] {
+  const { startTypes, endTypes, startEvent, endEvent, onError, ctx } = options
 
+  return [
+    eventListener({
+      types: startTypes,
+      ctx,
+      onEvent: startEvent,
+      onError,
+    }),
+    eventListener({
+      types: endTypes,
+      ctx,
+      onEvent: endEvent,
+      onError,
+    }),
+  ]
 }
 
-export function defaultErrorEvent(event){
-    if ((err as Error)?.name !== 'AbortError') {
-        logError('Error in forked handler', err)
-    }
+export function defaultErrorEvent(err: unknown): void {
+  if ((err as Error)?.name !== 'AbortError') {
+    logError('Error in event listener', err)
+  }
 }
