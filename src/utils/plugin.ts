@@ -1,5 +1,7 @@
 import * as fs from 'node:fs'
 
+import { logError } from '@/utils/logger'
+
 const DEBUG_LOG = '/tmp/opencode-tracing-debug.log'
 
 export function debug(...args: unknown[]): void {
@@ -11,6 +13,15 @@ export interface EventListenerOptions {
   onEvent: (event: { type: string; data: Record<string, unknown> }) => void | Promise<void>
   onError: (err: unknown) => void
   types: string[]
+  ctx: { event: { subscribe: (args: { types?: string[]; signal?: AbortSignal }) => AsyncIterable<{ type: string; data: Record<string, unknown> }> } }
+}
+
+export interface EventListenerPairOptions {
+  startEvent: (event: { type: string; data: Record<string, unknown> }) => void | Promise<void>
+  endEvent: (event: { type: string; data: Record<string, unknown> }) => void | Promise<void>
+  onError: (err: unknown) => void
+  startTypes: string[]
+  endTypes: string[]
   ctx: { event: { subscribe: (args: { types?: string[]; signal?: AbortSignal }) => AsyncIterable<{ type: string; data: Record<string, unknown> }> } }
 }
 
@@ -43,4 +54,25 @@ export function eventListener(options: EventListenerOptions): AbortController {
     }
   })()
   return controller
+}
+
+export function eventListenerPair(EventListenerPairOptions ){
+    eventInfoList =  [{types: startTypes ,onEvent: startEvent, onError: onError},
+                    {types: endTypes, onEvent: endEvent, onError: onError}]
+    return
+        eventInfoList.map( (eventInfo) => {
+          eventListener({
+            types: eventInfo.types
+            ctx,
+            onEvent: eventInfo.onEvent,
+            onError: onError,
+          }),
+        })
+
+}
+
+export function defaultErrorEvent(event){
+    if ((err as Error)?.name !== 'AbortError') {
+        logError('Error in forked handler', err)
+    }
 }
