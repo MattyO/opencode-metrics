@@ -19,7 +19,7 @@ interface PluginContext {
 
 import { TracingOptions, ExecutionInfo } from '@/types/tracing'
 import { logError } from '@/utils/logger'
-import { debug } from '@/utils/plugin'
+import { debug, eventListener } from '@/utils/plugin'
 import { resolveOtlpEndpoint } from '@/utils/otel'
 import { useSpanStore } from '@/store/spanStore'
 
@@ -175,180 +175,149 @@ export default Plugin.define({
     // Event handlers
     // -----------------------------------------------------------------------
 
-    const controllers: AbortController[] = []
+    const ALL_EVENTS = [
+      'session.execution.started',
+      'session.execution.succeeded',
+      'session.execution.failed',
+      'session.execution.interrupted',
+      'session.inbox.delivered',
+      'session.step.started',
+      'session.step.ended',
+      'session.step.first-token',
+      'session.reasoning.started',
+      'session.reasoning.ended',
+      'session.tool.called',
+      'session.tool.success',
+      'session.tool.failed',
+      'session.compaction.started',
+      'session.compaction.ended',
+    ] as const
+    const SHOW_FULL_DATA= new Set([
+      'session.reasoning.started',
+      'session.reasoning.ended',
+      'session.tool.called',
+      'session.tool.success',
+      'session.tool.failed',
+      'session.compaction.started',
+      'session.compaction.ended',
+    ])
 
-    // session.execution.started
-    {
-      const controller = new AbortController()
-      controllers.push(controller)
-      void (async () => {
-        debug('[opencode-tracing] Listening session.execution.started')
-        try {
-          for await (
-            const event of ctx.event.subscribe({ types: ['session.execution.started'], signal: controller.signal })
-          ) {
-            findOrCreateSpan(`session.execution-${event.data.sessionID}`, { sessionId: event.data.sessionID, type: 'ai.session.execution' })
-          }
-        } catch (err) {
-          if ((err as any)?.name !== 'AbortError') {
+    const controllers: AbortController[] = [
+      // session.execution.started
+      eventListener({
+        types: ['session.execution.started'],
+        ctx,
+        onEvent: (event) => {
+          findOrCreateSpan(`session.execution-${event.data.sessionID}`, { sessionId: event.data.sessionID, type: 'ai.session.execution' })
+        },
+        onError: (err) => {
+          if ((err as Error)?.name !== 'AbortError') {
             logError('Error in forked handler', err)
           }
-        }
-      })()
-    }
+        },
+      }),
 
-    // session.execution ended
-    {
-      const controller = new AbortController()
-      controllers.push(controller)
-      void (async () => {
-        debug('[opencode-tracing] Listening session.execution.end events')
-        try {
-          for await (
-            const event of ctx.event.subscribe({
-              types: ['session.execution.succeeded', 'session.execution.failed', 'session.execution.interrupted'],
-              signal: controller.signal,
-            })
-          ) {
-            stopSpan(`session.execution-${event.data.sessionID}`)
-            const provider = useSpanStore.use.provider()
-            provider?.forceFlush().then(
-              () => debug('[opencode-tracing] Flush succeeded after span end'),
-              (err) => debug('[opencode-tracing] Flush FAILED:', err),
-            )
-          }
-        } catch (err) {
-          if ((err as any)?.name !== 'AbortError') {
+      // session.execution ended
+      eventListener({
+        types: ['session.execution.succeeded', 'session.execution.failed', 'session.execution.interrupted'],
+        ctx,
+        onEvent: (event) => {
+          stopSpan(`session.execution-${event.data.sessionID}`)
+          const provider = useSpanStore.use.provider()
+          provider?.forceFlush().then(
+            () => debug('[opencode-tracing] Flush succeeded after span end'),
+            (err) => debug('[opencode-tracing] Flush FAILED:', err),
+          )
+        },
+        onError: (err) => {
+          if ((err as Error)?.name !== 'AbortError') {
             logError('Error in forked handler', err)
           }
-        }
-      })()
-    }
+        },
+      }),
 
-    // session.inbox.delivered
-    {
-      const controller = new AbortController()
-      controllers.push(controller)
-      void (async () => {
-        debug('[opencode-tracing] Listening session.inbox.delivered')
-        try {
-          for await (
-            const event of ctx.event.subscribe({ types: ['session.inbox.delivered'], signal: controller.signal })
-          ) {
-            const span = getActiveParentSessionSpan(event.data.sessionID as string)
-            if (span) {
-              span.span.setAttribute('msgId', event.data.inboxID as string)
-            }
+      // session.inbox.delivered
+      eventListener({
+        types: ['session.inbox.delivered'],
+        ctx,
+        onEvent: (event) => {
+          const span = getActiveParentSessionSpan(event.data.sessionID as string)
+          if (span) {
+            span.span.setAttribute('msgId', event.data.inboxID as string)
           }
-        } catch (err) {
-          if ((err as any)?.name !== 'AbortError') {
+        },
+        onError: (err) => {
+          if ((err as Error)?.name !== 'AbortError') {
             logError('Error in forked handler', err)
           }
-        }
-      })()
-    }
+        },
+      }),
 
-    // session.step.started
-    {
-      const controller = new AbortController()
-      controllers.push(controller)
-      void (async () => {
-        debug('[opencode-tracing] Listening session.step.started')
-        try {
-          for await (
-            const event of ctx.event.subscribe({ types: ['session.step.started'], signal: controller.signal })
-          ) {
-            const sid = event.data.sessionID as string
-            const parentSpan = getActiveParentSessionSpan(sid)
-            findOrCreateSpan(`session.step${sid}`, undefined, sid, event.data.assistantMessageID, {
-              attributes: {
-                sessionId: sid,
-                type: 'ai.session.execution',
-                agent: event.data.agent,
-                model: event.data.model?.id,
-              },
-              links: parentSpan ? [{ context: parentSpan.span.spanContext() }] : [],
-            })
-          }
-        } catch (err) {
-          if ((err as any)?.name !== 'AbortError') {
+      // session.step.started
+      eventListener({
+        types: ['session.step.started'],
+        ctx,
+        onEvent: (event) => {
+          const sid = event.data.sessionID as string
+          const parentSpan = getActiveParentSessionSpan(sid)
+          findOrCreateSpan(`session.step${sid}`, undefined, sid, event.data.assistantMessageID, {
+            attributes: {
+              sessionId: sid,
+              type: 'ai.session.execution',
+              agent: event.data.agent,
+              model: event.data.model?.id,
+            },
+            links: parentSpan ? [{ context: parentSpan.span.spanContext() }] : [],
+          })
+        },
+        onError: (err) => {
+          if ((err as Error)?.name !== 'AbortError') {
             logError('Error in forked handler', err)
           }
-        }
-      })()
-    }
+        },
+      }),
 
-    // session.step.ended
-    {
-      const controller = new AbortController()
-      controllers.push(controller)
-      void (async () => {
-        debug('[opencode-tracing] Listening session.step.ended')
-        try {
-          for await (
-            const event of ctx.event.subscribe({ types: ['session.step.ended'], signal: controller.signal })
-          ) {
-            const sid = event.data.sessionID as string
-            const parentSpan = getActiveParentSessionSpan(sid)
-            findOrCreateSpan(`session.step${sid}`, undefined, sid, event.data.assistantMessageID, {
-              attributes: {
-                sessionId: sid,
-                type: 'ai.session.execution',
-                agent: event.data.agent,
-                model: event.data.model?.id,
-              },
-              links: parentSpan ? [{ context: parentSpan.span.spanContext() }] : [],
-            })
-          }
-        } catch (err) {
-          if ((err as any)?.name !== 'AbortError') {
+      // session.step.ended
+      eventListener({
+        types: ['session.step.ended'],
+        ctx,
+        onEvent: (event) => {
+          const sid = event.data.sessionID as string
+          const parentSpan = getActiveParentSessionSpan(sid)
+          findOrCreateSpan(`session.step${sid}`, undefined, sid, event.data.assistantMessageID, {
+            attributes: {
+              sessionId: sid,
+              type: 'ai.session.execution',
+              agent: event.data.agent,
+              model: event.data.model?.id,
+            },
+            links: parentSpan ? [{ context: parentSpan.span.spanContext() }] : [],
+          })
+        },
+        onError: (err) => {
+          if ((err as Error)?.name !== 'AbortError') {
             logError('Error in forked handler', err)
           }
-        }
-      })()
-    }
+        },
+      }),
 
-    // All events debug log
-    {
-      const controller = new AbortController()
-      controllers.push(controller)
-      void (async () => {
-        debug('[opencode-tracing] Listening all events for debug')
-        try {
-          for await (
-            const event of ctx.event.subscribe({ signal: controller.signal })
-          ) {
-            const showFullData = new Set([
-              'session.execution.started',
-              'session.execution.succeeded',
-              'session.execution.failed',
-              'session.execution.interrupted',
-              'session.inbox.delivered',
-              'session.step.started',
-              'session.step.ended',
-              'session.step.first-token',
-              'session.reasoning.started',
-              'session.reasoning.ended',
-              'session.tool.called',
-              'session.tool.success',
-              'session.tool.failed',
-              'session.compaction.started',
-              'session.compaction.ended',
-            ])
-            if (event.type !== 'session.reasoning.delta' && event.type !== 'session.text.delta' && event.type !== 'session.compaction.delta') {
-              debug(`[opencode-tracing] EVENT type=${event.type}`)
-              if (showFullData.has(event.type)) {
-                debug(`[opencode-tracing] ${event.type} EVENT data=${inspect(event, { depth: 3, colors: true })}`)
-              }
-            }
+      // All events debug log
+      eventListener({
+        types: ['*', '-session.reasoning.delta', '-session.text.delta', '-session.compaction.delta'],
+        ctx,
+        onEvent: (event) => {
+          debug(`[opencode-tracing] EVENT type=${event.type}`)
+          if (new Set(SHOW_FULL_DATA).has(event.type)) {
+            debug(`[opencode-tracing] ${event.type} EVENT data=${inspect(event, { depth: 3, colors: true })}`)
           }
-        } catch (err) {
-          if ((err as any)?.name !== 'AbortError') {
+        },
+        onError: (err) => {
+          if ((err as Error)?.name !== 'AbortError') {
             logError('Error in forked handler', err)
           }
-        }
-      })()
-    }
+        },
+      }),
+    ]
 
     // -----------------------------------------------------------------------
     // Cleanup

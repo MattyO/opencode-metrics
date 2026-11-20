@@ -16,11 +16,24 @@ export interface EventListenerOptions {
 
 export function eventListener(options: EventListenerOptions): AbortController {
   const controller = new AbortController()
+
+  const blacklistedEvents = new Set(
+    options.types.filter((t) => t.startsWith('-')).map((t) => t.slice(1)),
+  )
+
+  const useWildcard = options.types.includes('*')
+  const subscribeTypes = useWildcard
+    ? undefined
+    : options.types.filter((t) => !t.startsWith('-') && !blacklistedEvents.has(t))
+
   void (async () => {
     try {
-      for await (
-        const event of options.ctx.event.subscribe({ types: options.types, signal: controller.signal })
-      ) {
+      for await (const event of options.ctx.event.subscribe({
+        ...(useWildcard ? {} : { types: subscribeTypes }),
+        signal: controller.signal,
+      })) {
+
+        if (blacklistedEvents.has(event.type)) continue
         await options.onEvent(event)
       }
     } catch (err) {

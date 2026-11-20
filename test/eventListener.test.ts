@@ -1,5 +1,6 @@
 import { describe, it, expect, rs } from '@rstest/core'
 import { eventListener } from '@/utils/plugin'
+import { asyncGeneratorMock, withTimeout} from '@testHelpers/testHelpers'
 
 describe('eventListener', () => {
   it('should return an AbortController', () => {
@@ -93,5 +94,101 @@ describe('eventListener', () => {
     await new Promise((r) => setTimeout(r, 50))
 
     expect(onError).not.toHaveBeenCalled()
+  })
+
+  it('should omit "types" from subscribe when types contains "*"', async () => {
+    const mockCtx = {
+      event: {
+        subscribe: rs.fn().mockReturnValue((async function* () {})()),
+      },
+    }
+
+    eventListener({
+      types: ['*', '-session.reasoning.delta'],
+      onEvent: rs.fn(),
+      onError: rs.fn(),
+      ctx: mockCtx,
+    })
+
+    expect(mockCtx.event.subscribe).toHaveBeenCalledTimes(1)
+    const args = mockCtx.event.subscribe.mock.calls[0][0]
+    expect(args).toHaveProperty('signal')
+    expect(args).not.toHaveProperty('types')
+  })
+
+  it('should pass types array to subscribe as a normal set of strings', async () => {
+    const mockCtx = {
+      event: {
+        subscribe: rs.fn().mockReturnValue((async function* () {})()),
+      },
+    }
+
+    eventListener({
+      types: ['a.event', 'b.event'],
+      onEvent: rs.fn(),
+      onError: rs.fn(),
+      ctx: mockCtx,
+    })
+
+    expect(mockCtx.event.subscribe).toHaveBeenCalledTimes(1)
+    const args = mockCtx.event.subscribe.mock.calls[0][0]
+    expect(args.types).toEqual(['a.event', 'b.event'])
+  })
+
+  it('should remove excluded types from subscribe args', async () => {
+    const mockCtx = {
+      event: {
+        subscribe: rs.fn().mockReturnValue((async function* () {})()),
+      },
+    }
+
+    eventListener({
+      types: ['typeOne', 'typeTwo', '-typeOne'],
+      onEvent: rs.fn(),
+      onError: rs.fn(),
+      ctx: mockCtx,
+    })
+
+    expect(mockCtx.event.subscribe).toHaveBeenCalledTimes(1)
+    const args = mockCtx.event.subscribe.mock.calls[0][0]
+    expect(args.types).toEqual(['typeTwo'])
+  })
+
+  it('guards against blacklisted function when passed a *', async () => {
+    const events = [
+      { type: 'session.test', data: { key: 'val1' } },
+      { type: 'session.test', data: { key: 'val1' } },
+      { type: 'session.exclude', data: { key: 'val2' } },
+    ]
+
+    const {callAsyncMock, stopExecution, subscribeMock, onEmpty} = asyncGeneratorMock()
+    const mockCtx = {
+      event: {
+        subscribe: subscribeMock,
+      },
+    }
+    const onEvent = rs.fn()
+
+
+    eventListener({
+      types: ['*', '-session.exclude'],
+      onEvent: onEvent ,
+      onError: rs.fn(),
+      ctx: mockCtx,
+    })
+
+    events.forEach(event=> {
+      callAsyncMock(event)
+
+    });
+
+     let wascalled = false
+     await withTimeout( onEmpty( ()=> {
+          expect(onEvent).toHaveBeenCalledTimes(2)
+      }), 5000)
+      expect(onEvent).toHaveBeenCalledTimes(2)
+
+
+    stopExecution()
   })
 })
