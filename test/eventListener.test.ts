@@ -161,7 +161,7 @@ describe('eventListener', () => {
       { type: 'session.exclude', data: { key: 'val2' } },
     ]
 
-    const {callAsyncMock, stopExecution, subscribeMock, onEmpty} = asyncGeneratorMock()
+    const {yieldItem, stopExecution, subscribeMock} = asyncGeneratorMock()
     const mockCtx = {
       event: {
         subscribe: subscribeMock,
@@ -178,17 +178,21 @@ describe('eventListener', () => {
     })
 
     events.forEach(event=> {
-      callAsyncMock(event)
+      yieldItem(event)
 
     });
 
-     let wascalled = false
-     await withTimeout( onEmpty( ()=> {
-          expect(onEvent).toHaveBeenCalledTimes(2)
-      }), 5000)
-      expect(onEvent).toHaveBeenCalledTimes(2)
+    //await stopExecution()
+
+    await withTimeout( stopExecution(), 5000)
+    expect(onEvent).toHaveBeenCalledTimes(2)
+
+     //let wascalled = false
+     //await withTimeout( onEmpty( ()=> {
+     //     expect(onEvent).toHaveBeenCalledTimes(2)
+     // }), 5000)
+     // expect(onEvent).toHaveBeenCalledTimes(2)
 
 
-    stopExecution()
   })
 })

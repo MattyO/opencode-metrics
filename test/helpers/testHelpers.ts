@@ -1,7 +1,6 @@
 import { rs } from '@rstest/core'
 
 export function withTimeout(promise, ms, message = `Timed out after ${ms}ms`) {
-    console.log('racing')
   return Promise.race([
     promise,
     new Promise((_, reject) =>
@@ -17,53 +16,38 @@ async function sleep(ms){
 export function asyncGeneratorMock(){
     let shouldContinue = true
     let items = []
-    let onEmptyCallback = () => {}
-    let doneWaiting = false
-    const doneWaitingPromise = (async () => {
-        while(!doneWaiting){ await sleep(50); }
-        return 'done'
-    })()
-    const registerCallback = (callback) => {
-        onEmptyCallback = callback
-        return doneWaitingPromise
-    }
 
     return {
-        callAsyncMock: (args) => {
+        yieldItem: (args) => {
             items.push(args)
         },
+
         stopExecution: () => {
-            shouldContinue  = false
-
-        },
-        onEmpty: registerCallback ,
-        subscribeMock:rs.fn().mockReturnValue((async function* () {
-        try{
-
-
-            while(items.length > 0 || shouldContinue == true){
-                if(items.length == 0){
-                    await sleep(50)
-                    continue
-
-                }
-                const itemsYielded = items.length > 0
-
+            shouldContinue == false
+            return (async () => {
                 while(items.length > 0){
-                    yield items.pop(0)
+                    await sleep(50);
                 }
+            })()
+        },
 
-                if(itemsYielded){
-                    doneWaiting = true
-                    onEmptyCallback()
+        subscribeMock: rs.fn().mockReturnValue((async function* () {
+            try{
+                while(items.length > 0 || shouldContinue == true){
+                    if(items.length == 0){
+                        await sleep(50)
+                        continue
+
+                    }
+                    const itemsYielded = items.length > 0
+
+                    while(items.length > 0){
+                        yield items.pop(0)
+                    }
                 }
-
+            }catch( err ){
+                console.log(err )
             }
-        }catch( err ){
-            console.log(err )
-
-        }
-
         })()),
     }
 }
