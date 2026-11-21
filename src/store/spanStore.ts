@@ -35,8 +35,8 @@ interface SpanStore {
 
 function spanCompare(span, spanName, lookupInfo){
     return (span.spanName === spanName ||
-          (lookupInfo.sessionId !== undefined && span.sessionId === lookupInfo.sessionId) ||
-          (lookupInfo.messageId !== undefined && span.messageId === lookupInfo.messageId))
+          (lookupInfo?.sessionId !== undefined && span.sessionId === lookupInfo.sessionId) ||
+          (lookupInfo?.messageId !== undefined && span.messageId === lookupInfo.messageId))
 
 }
 
@@ -50,10 +50,10 @@ const baseStore = createStore<SpanStore>((set, get) => ({
       spans: [...state.spans, entry],
     })),
 
-  removeSpan: (spanName, lookupInfo) =>
+  removeSpan: (spanName, lookupInfo = {}) =>
     set((state) => ({
       spans: state.spans.filter((s) =>
-          spanCompare(spanName, lookupInfo)
+          !spanCompare(s, spanName, lookupInfo)
       ),
     })),
 

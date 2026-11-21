@@ -78,4 +78,16 @@ describe('SpanStore', () => {
       expect(result.lookupInfo).toEqual({ sessionId: '123', messageId: '' })
     })
   })
+
+  describe('removeSpan', () => {
+    it('should remove only the matching span', () => {
+      spanStore.use.addSpan(createSpanEntry({ spanName: 'keep-me' }))
+      spanStore.use.addSpan(createSpanEntry({ spanName: 'remove-me' }))
+
+      spanStore.getState().removeSpan('remove-me', {})
+
+      expect(spanStore.getState().spans).toHaveLength(1)
+      expect(spanStore.getState().spans[0]?.spanName).toBe('keep-me')
+    })
+  })
 })
