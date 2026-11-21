@@ -1,10 +1,10 @@
 import { describe, it, expect, rs, beforeEach } from '@rstest/core'
 import { eventListener, eventListenerPair, defaultErrorEvent } from '@/utils/plugin'
-import { logError } from '@/utils/logger'
+import { logError } from '@/utils/log'
 import { asyncGeneratorMock, withTimeout} from '@testHelpers/testHelpers'
 
 // Mock logger for defaultErrorEvent tests
-rs.mock('@/utils/logger', () => ({
+rs.mock('@/utils/log', () => ({
   logError: rs.fn(),
 }))
 describe('eventListener', () => {

@@ -18,13 +18,14 @@ interface PluginContext {
 }
 
 import { TracingOptions, ExecutionInfo } from '@/types/tracing'
-import { logError } from '@/utils/logger'
-import { debug, defaultErrorEvent, eventListener, eventListenerPair } from '@/utils/plugin'
+import { logError } from '@/utils/log'
+import { debug, eventListener, eventListenerPair } from '@/utils/plugin'
+import { sharedEvents } from '@/plugin/eventDefinitions'
 import { setupProvider } from '@/utils/tracing'
 import { spanStore } from '@/store/spanStore'
 
 import { pairDefinitions } from '@/plugin/eventPairDefinitions'
-import {eventDefinitions} from '@/plugin/eventDefinitions'
+import { pluginEvents } from '@/plugin/eventDefinitions'
 
 
 // ---------------------------------------------------------------------------
@@ -72,7 +73,7 @@ export default Plugin.define({
       pairDefinitions.enteries.map((key, pairDefinition) => {
         return eventListenerPair({
           ctx,
-          onError: defaultErrorEvent,
+          onError: sharedEvents.defaultErrorEvent,
           startTypes: pairDefinition.startTypes,
           startEvent: pairDefinition.startEvent,
           endTypes: pairDefinition.endTypes,
@@ -81,10 +82,10 @@ export default Plugin.define({
 
       }),
 
-      eventDefinition.enteries.map((key, eventDefinition) => {
+      pluginEvents.enteries.map((key, eventDefinition) => {
         return eventListenerPair({
           ctx,
-          onError: defaultErrorEvent,
+          onError: sharedEvents.defaultErrorEvent,
           types: eventDefinition.types,
           onEvent: eventDefinition.event,
         })

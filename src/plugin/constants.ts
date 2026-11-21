@@ -1,3 +1,5 @@
+export const DEBUG_LOG = '/tmp/opencode-tracing-debug.log'
+
 export const ALL_EVENTS = [
   'session.execution.started',
   'session.execution.succeeded',

@@ -1,7 +1,13 @@
 import {ALL_EVENTS, SHOW_FULL_DATA} from '@/plugin/constants'
+import { debug, logError } from '@/utils/log'
+import { inspect } from 'util'
 
-import {eventDefinitions} from '@/plugin/eventDefinitions'
-export const eventDefinitions: {
+import { getActiveParentSessionSpan } from '@/plugin/spanUtils'
+
+export const pluginEvents: Record<string, {
+  types: string[]
+  event: (event: any) => void
+}> = {
     inboxDelivered:{
         types: ['session.inbox.delivered'],
         event: (event) => {
@@ -20,5 +26,12 @@ export const eventDefinitions: {
           }
         },
     }
+}
 
+export const sharedEvents = {
+  defaultErrorEvent: (err: unknown): void => {
+    if ((err as Error)?.name !== 'AbortError') {
+      logError('Error in event listener', err)
+    }
+  },
 }
