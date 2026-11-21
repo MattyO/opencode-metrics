@@ -90,4 +90,58 @@ describe('SpanStore', () => {
       expect(spanStore.getState().spans[0]?.spanName).toBe('keep-me')
     })
   })
+
+  describe('initProvider', () => {
+    it('should set the provider and exporter in state', async () => {
+      const mockExporter = { shutdown: async () => {} }
+      await spanStore.getState().initProvider(
+        { 'service.name': 'test-service' },
+        mockExporter as any,
+      )
+
+      const { provider, exporter } = spanStore.getState()
+      expect(provider).toBeDefined()
+      expect(exporter).toBe(mockExporter)
+    })
+  })
+
+  describe('shutdownProvider', () => {
+    it('should clear the provider and exporter after shutdown', async () => {
+      const mockExporter = { shutdown: async () => {} }
+      await spanStore.getState().initProvider(
+        { 'service.name': 'test-service' },
+        mockExporter as any,
+      )
+
+      expect(spanStore.getState().provider).toBeDefined()
+      expect(spanStore.getState().exporter).toBeDefined()
+
+      await spanStore.use.shutdownProvider()
+
+      expect(spanStore.getState().provider).toBeUndefined()
+      expect(spanStore.getState().exporter).toBeUndefined()
+    })
+  })
+
+  describe('replaceProvider', () => {
+    it('should shut down the old provider and set a new one', async () => {
+      const mockExporter = { shutdown: async () => {} }
+      await spanStore.use.initProvider(
+        { 'service.name': 'old-service' },
+        mockExporter as any,
+      )
+
+      const oldProvider = spanStore.getState().provider
+
+      const newExporter = { shutdown: async () => {} }
+      await spanStore.use.replaceProvider(
+        { 'service.name': 'new-service' },
+        newExporter as any,
+      )
+
+      expect(spanStore.getState().provider).toBeDefined()
+      expect(spanStore.getState().provider).not.toBe(oldProvider)
+      expect(spanStore.getState().exporter).toBeDefined()
+    })
+  })
 })

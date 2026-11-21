@@ -105,5 +105,5 @@ const baseStore = createStore<SpanStore>((set, get) => ({
   },
 }))
 
-export const spanStore = createSelectors(baseStore, ['spans', 'provider', 'exporter', 'findSpan', 'removeSpan', 'addSpan'  ])
+export const spanStore = createSelectors(baseStore, ['spans', 'provider', 'exporter', 'findSpan', 'removeSpan', 'addSpan', 'initProvider', 'shutdownProvider', 'replaceProvider'  ])
 //export const useSpanStore = baseStore
