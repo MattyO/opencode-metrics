@@ -9,7 +9,7 @@ rs.mock('lodash', () => ({
 
 // Mock @/store/spanStore — use rs.fn for initProvider so it's callable
 rs.mock('@/store/spanStore', () => ({
-  useSpanStore: {
+  spanStore: {
     use: {
       provider: () => undefined,
       exporter: () => undefined,

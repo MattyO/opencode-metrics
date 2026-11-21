@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from '@rstest/core'
-import { useSpanStore } from '@/store/spanStore'
+import { spanStore } from '@/store/spanStore'
 
 // ---------------------------------------------------------------------------
 // Clear the real store before each test
 // ---------------------------------------------------------------------------
 
 function clearStore() {
-  useSpanStore.getState().clear()
+  spanStore.getState().clear()
 }
 
 // ---------------------------------------------------------------------------
@@ -25,7 +25,7 @@ describe('tracing/createSpan', () => {
   it('should register the span in the store', () => {
     createSpan('my-span', { type: 'test' })
 
-    const entry = useSpanStore.getState().findSpan('my-span')
+    const entry = spanStore.getState().findSpan('my-span')
     expect(entry).toBeDefined()
     expect(entry?.spanName).toBe('my-span')
     expect(entry?.type).toBe('test')
@@ -39,7 +39,7 @@ describe('tracing/createSpan', () => {
       attributes: { foo: 'bar', count: 42 },
     })
 
-    const entry = useSpanStore.getState().findSpan('attr-span')
+    const entry = spanStore.getState().findSpan('attr-span')
     expect(entry).toBeDefined()
     expect(entry?.spanName).toBe('attr-span')
     expect(entry?.type).toBe('attr-test')
@@ -52,7 +52,7 @@ describe('tracing/createSpan', () => {
       parent: parentSpan,
     })
 
-    const entry = useSpanStore.getState().findSpan('parented-span')
+    const entry = spanStore.getState().findSpan('parented-span')
     expect(entry).toBeDefined()
     expect(entry?.spanName).toBe('parented-span')
   })
@@ -63,7 +63,7 @@ describe('tracing/createSpan', () => {
       lookupInfo: { sessionId: 'session-1', messageId: 'msg-1' },
     })
 
-    const entry = useSpanStore.getState().findSpan('lookup-span')
+    const entry = spanStore.getState().findSpan('lookup-span')
     expect(entry?.lookupInfo?.sessionId).toBe('session-1')
     expect(entry?.lookupInfo?.messageId).toBe('msg-1')
   })
@@ -76,7 +76,7 @@ describe('tracing/createSpan', () => {
 
   it('should work with no options', () => {
     createSpan('no-options-span')
-    const entry = useSpanStore.getState().findSpan('no-options-span')
+    const entry = spanStore.getState().findSpan('no-options-span')
     expect(entry).toBeDefined()
     expect(entry?.spanName).toBe('no-options-span')
   })

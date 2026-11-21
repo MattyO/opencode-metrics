@@ -21,7 +21,7 @@ import { TracingOptions, ExecutionInfo } from '@/types/tracing'
 import { logError } from '@/utils/logger'
 import { debug, defaultErrorEvent, eventListener, eventListenerPair } from '@/utils/plugin'
 import { setupProvider } from '@/utils/tracing'
-import { useSpanStore } from '@/store/spanStore'
+import { spanStore } from '@/store/spanStore'
 
 import { pairDefinitions } from '@/plugin/eventPairDefinitions'
 import {eventDefinitions} from '@/plugin/eventDefinitions'
@@ -100,7 +100,7 @@ export default Plugin.define({
       debug('[opencode-tracing] Shutdown — flushing spans...')
       controllers.forEach((c) => c.abort())
       clearInterval(cleanupTimer)
-      await useSpanStore.getState().shutdownProvider()
+      await spanStore.getState().shutdownProvider()
     }
   },
 })

@@ -2,7 +2,7 @@ import { Span, trace, context } from '@opentelemetry/api'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import { TracingOptions } from '@/types/tracing'
 import { debug } from '@/utils/plugin'
-import { useSpanStore } from '@/store/spanStore'
+import { spanStore } from '@/store/spanStore'
 
 // ---------------------------------------------------------------------------
 // Module-level singleton — survives hot-reload (endpoint string only, cheap to recreate)
@@ -20,7 +20,7 @@ export function setupProvider(
   opts: TracingOptions,
   forceReload?: boolean,
 ): void {
-  const store = useSpanStore
+  const store = spanStore
   const needsNewProvider = !store.use.provider() || forceReload || _lastEndpoint === '__FORCE_RELOAD__'
 
   if (needsNewProvider) {
@@ -93,7 +93,7 @@ export function createSpan(
   }
 
   // Register in the store
-  useSpanStore.selectors.addSpan({
+  spanStore.use.addSpan({
     spanName: name,
     type: options.type,
     lookupInfo: options.lookupInfo,
@@ -139,7 +139,7 @@ export function findOrCreateSpan(
 }
 
 export function flushProvider(){
-    const provider = useSpanStore.selectors.provider()
+    const provider = spanStore.use.provider()
     provider?.forceFlush().then(
         () => debug('[opencode-tracing] Flush succeeded after span end'),
         (err) => debug('[opencode-tracing] Flush FAILED:', err),

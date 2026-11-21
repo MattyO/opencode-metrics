@@ -1,7 +1,7 @@
 import type { StoreApi } from 'zustand/vanilla'
 
 type WithSelectors<S extends StoreApi<unknown>> = S & {
-  use: { [K in keyof S['getState']]: () => S['getState'][K] }
+  use: { [K in keyof S['getState']]: S['getState'][K] }
 }
 
 /**
@@ -18,8 +18,8 @@ export function createSelectors<S extends StoreApi<unknown>>(
   storeWithSelectors.use = {} as WithSelectors<S>['use']
 
   for (const key of whitelist) {
-    ;(storeWithSelectors.use as Record<string, () => unknown>)[String(key)] = () =>
-      store.getState()[key]
+    ;(storeWithSelectors.use as Record<string, (...args: unknown[]) => unknown>)[String(key)] = (...args: unknown[]) =>
+      (store.getState()[key] as (...args: unknown[]) => unknown)(...args)
   }
 
   return storeWithSelectors

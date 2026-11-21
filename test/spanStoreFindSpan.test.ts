@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from '@rstest/core'
-import { useSpanStore } from '@/store/spanStore'
+import { spanStore } from '@/store/spanStore'
 
 // ---------------------------------------------------------------------------
 // Helper: clear the store before each test
 // ---------------------------------------------------------------------------
 
 function clearStore() {
-  useSpanStore.setState({ spans: [] })
+  spanStore.setState({ spans: [] })
 }
 
 // ---------------------------------------------------------------------------
@@ -18,56 +18,57 @@ describe('spanStore/findSpan', () => {
 
   describe('selector', () => {
       it('is avalible through a selector', ()=>{
-          expect(useSpanStore.use.findSpan).toBeInstanceOf(Function)
+          expect(spanStore.use.findSpan).toBeInstanceOf(Function)
       })
   })
   describe('spans not found returns undefined', () => {
       it('when there are spans', ()=>{
-          expect(useSpanStore.use.findSpan('not-a-span')).toBeUndefined()
+          expect(spanStore.getState().findSpan('not-a-span')).toBeUndefined()
       })
       it('when the span doesnt match', ()=>{
-        useSpanStore.use.addSpan('span.name', 'span.type')
-        expect(useSpanStore.use.findSpan('not-a-span')).toBeUndefined()
+        spanStore.use.addSpan({spanName: 'span.name'})
+        expect(spanStore.use.findSpan('not-a-span')).toBeUndefined()
       })
   })
 
   describe('matching by spanName', () => {
     it('should return the span when spanName matches', () => {
 
-      useSpanStore.use.addSpan('span.name', 'span.type')
+      spanStore.use.addSpan({spanName: 'span.name'})
+        console.log(spanStore.getState())
 
-      const result = useSpanStore.use.findSpan('span.name')
+      const result = spanStore.use.findSpan('span.name')
 
       expect(result).toBeDefined()
-      expect(result?.spanName).toBe('my-span')
+      expect(result?.spanName).toBe('span.name')
     })
   })
 
   describe('matching by lookupInfo', () => {
+      it('finds the span when the name matchs and the lookupInfo matches',()=>{
+          const mockSpan = {
+            setAttribute: () => {},
+            end: () => {},
+            spanContext: () => ({ traceId: 'abc', spanId: 'def', traceFlags: 1 }),
+            isRecording: () => true,
+          }
+          spanStore.use.addSpan({ spanName: 'step-span', lookupInfo: {sessionId: "123"}, span: mockSpan })
+          spanStore.use.addSpan({ spanName: 'step-span', lookupInfo: {sessionId: "456"}, span: mockSpan })
 
-  })
+          const result = spanStore.use.findSpan('step-span', {sessionId: '123'})
 
-  describe('fallback when lookupInfo is undefined', () => {
-    it('should return the first span when lookupInfo is undefined', () => {
-      const mockSpan = {
-        setAttribute: () => {},
-        end: () => {},
-        spanContext: () => ({ traceId: 'abc', spanId: 'def', traceFlags: 1 }),
-        isRecording: () => true,
-      }
-      useSpanStore.getState().addSpan({ spanName: 'span-a', type: 'a', span: mockSpan })
-      useSpanStore.getState().addSpan({ spanName: 'span-b', type: 'b', span: mockSpan })
+          expect(result).toBeDefined()
+          expect(result.spanName).toEqual('step-span')
+          expect(result.lookupInfo).toEqual({sessionId: '123'})
+      })
+      it('ignores keys where lookupInfo isnt defined and span info is defined', ()=>{
+      })
 
-      const result = useSpanStore.getState().findSpan(undefined, undefined)
-
-      expect(result).toBeDefined()
-      expect(result?.spanName).toBe('span-a')
-    })
   })
 
   describe('edge cases', () => {
     it('should return undefined when store is empty', () => {
-      const result = useSpanStore.getState().findSpan()
+      const result = spanStore.getState().findSpan()
       expect(result).toBeUndefined()
     })
 
@@ -78,10 +79,10 @@ describe('spanStore/findSpan', () => {
         spanContext: () => ({ traceId: 'abc', spanId: 'def', traceFlags: 1 }),
         isRecording: () => true,
       }
-      useSpanStore.getState().addSpan({ spanName: 'step-span', type: 'step', span: mockSpan })
-      useSpanStore.getState().addSpan({ spanName: 'step-span', type: 'step', span: mockSpan })
+      spanStore.getState().addSpan({ spanName: 'step-span', type: 'step', span: mockSpan })
+      spanStore.getState().addSpan({ spanName: 'step-span', type: 'step', span: mockSpan })
 
-      const result = useSpanStore.getState().findSpan('step-span')
+      const result = spanStore.getState().findSpan('step-span')
 
       expect(result).toBeDefined()
       expect(result?.spanName).toBe('step-span')

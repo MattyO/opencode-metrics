@@ -4,6 +4,7 @@ import { BasicTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trac
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import { Span } from '@opentelemetry/api'
 import { createSelectors } from '@/helpers/store'
+import {result} from 'lodash'
 
 interface SpanEntry {
   spanName: string
@@ -32,10 +33,10 @@ interface SpanStore {
   replaceProvider: (resourceAttrs: ProviderAttrs, exporter: OTLPTraceExporter, maxQueueSize?: number, maxExportBatchSize?: number, exportTimeoutMillis?: number) => Promise<void>
 }
 
-function spanCompare(span, sessionName, lookupinfo){
-    return span.sessionName !== sessionName ||
-          (lookupInfo.sessionId !== undefined && span.sessionId !== lookupInfo.sessionId) ||
-          (lookupInfo.messageId !== undefined && span.messageId !== lookupInfo.messageId)
+function spanCompare(span, spanName, lookupInfo){
+    return (span.spanName === spanName ||
+          (lookupInfo.sessionId !== undefined && span.sessionId === lookupInfo.sessionId) ||
+          (lookupInfo.messageId !== undefined && span.messageId === lookupInfo.messageId))
 
 }
 
@@ -58,10 +59,10 @@ const baseStore = createStore<SpanStore>((set, get) => ({
 
   clear: () => set({ spans: [] }),
 
-  findSpan: (spanName, lookupInfo) => {
+  findSpan: (spanName, lookupInfo = {}) => {
     const { spans } = get()
-    spans.find((span) => {
-        spanCompare(span, spanName, lookupInfo)
+    return spans.find((span) => {
+        return spanCompare(span, spanName, lookupInfo)
     })
   },
 
@@ -104,5 +105,5 @@ const baseStore = createStore<SpanStore>((set, get) => ({
   },
 }))
 
-export const useSpanStore = createSelectors(baseStore, ['spans', 'provider', 'exporter', 'findSpan', 'removeSpan'  ])
+export const spanStore = createSelectors(baseStore, ['spans', 'provider', 'exporter', 'findSpan', 'removeSpan', 'addSpan'  ])
 //export const useSpanStore = baseStore
