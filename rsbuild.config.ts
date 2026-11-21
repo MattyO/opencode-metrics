@@ -1,15 +1,14 @@
 import { defineConfig } from '@rsbuild/core';
 import { resolve } from 'node:path';
 
-const mocks = resolve(__dirname, 'test/__mocks__');
+const src = resolve(__dirname, 'src');
+const helpers = resolve(__dirname, 'test/helpers');
 
 export default defineConfig({
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src'),
-      '@testHelpers': resolve(__dirname, 'test/helpers'),
-      //'@opentelemetry/api': resolve(mocks, 'opentelemetry-api-mock.ts'),
-      //'@opencode/plugin': resolve(mocks, 'opencode-plugin-mock.ts'),
+      '@': src,
+      '@testHelpers': helpers,
     },
   },
 });
