@@ -1,4 +1,4 @@
-import { findOrCreateSpan, flushProvider} from '@/utils/tracing'
+import { findOrCreateSpan, flushProvider} from '@utils/tracing'
 
 export const pairDefinitions= {
     sessions: {

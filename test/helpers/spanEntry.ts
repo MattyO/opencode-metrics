@@ -22,7 +22,7 @@ export interface SpanEntryFactoryOptions {
   span?: Span
 }
 
-export function createSpanEntry(options: SpanEntryFactoryOptions = {}): ReturnType<typeof import('@/store/spanStore').spanStore.getState>['spans'][number] {
+export function createSpanEntry(options: SpanEntryFactoryOptions = {}): ReturnType<typeof import('@store/spanStore').spanStore.getState>['spans'][number] {
   const { spanName = 'test-span', type = 'test', lookupInfo, span = createMockSpan() } = options
   return {
     spanName,

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from '@rstest/core'
-import { spanStore } from '@/store/spanStore'
+import { spanStore } from '@store/spanStore'
 import { createSpanEntry } from '@testHelpers/spanEntry'
+import { BasicTracerProvider} from '@opentelemetry/sdk-trace-base'
 
 // ---------------------------------------------------------------------------
 // Helper: clear the store before each test
@@ -92,9 +93,15 @@ describe('SpanStore', () => {
   })
 
   describe('initProvider', () => {
+      it('initial provider should be undefined', ()=>{
+          const { provider, exporter } = spanStore.getState()
+          expect(provider).toBeUndefined()
+          expect(spanStore.use.provider()).toBeUndefined()
+
+      })
     it('should set the provider and exporter in state', async () => {
       const mockExporter = { shutdown: async () => {} }
-      await spanStore.getState().initProvider(
+      spanStore.getState().initProvider(
         { 'service.name': 'test-service' },
         mockExporter as any,
       )
@@ -102,6 +109,18 @@ describe('SpanStore', () => {
       const { provider, exporter } = spanStore.getState()
       expect(provider).toBeDefined()
       expect(exporter).toBe(mockExporter)
+    })
+
+    it('provider should be accesable through selector', async () => {
+      const mockExporter = { shutdown: async () => {} }
+      spanStore.use.initProvider(
+        { 'service.name': 'test-service' },
+        mockExporter as any,
+      )
+
+      const { provider, exporter } = spanStore.getState()
+      expect(provider).toBeDefined()
+      expect(spanStore.use.provider()).toBe(provider)
     })
   })
 

@@ -17,15 +17,15 @@ interface PluginContext {
   event: { subscribe: (args: { types?: string[]; signal?: AbortSignal }) => AsyncIterable<{ type: string; data: EventData }> }
 }
 
-import { TracingOptions, ExecutionInfo } from '@/types/tracing'
-import { logError } from '@/utils/log'
-import { debug, eventListener, eventListenerPair } from '@/utils/plugin'
-import { sharedEvents } from '@/plugin/eventDefinitions'
-import { setupProvider } from '@/utils/tracing'
-import { spanStore } from '@/store/spanStore'
+import { TracingOptions, ExecutionInfo } from '@types/tracing'
+import { logError } from '@utils/log'
+import { debug, eventListener, eventListenerPair } from '@utils/plugin'
+import { sharedEvents } from '@plugin/eventDefinitions'
+import { setupProvider } from '@utils/tracing'
+import { spanStore } from '@store/spanStore'
 
-import { pairDefinitions } from '@/plugin/eventPairDefinitions'
-import { pluginEvents } from '@/plugin/eventDefinitions'
+import { pairDefinitions } from '@plugin/eventPairDefinitions'
+import { pluginEvents } from '@plugin/eventDefinitions'
 
 
 // ---------------------------------------------------------------------------

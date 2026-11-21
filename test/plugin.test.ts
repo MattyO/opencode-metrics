@@ -7,8 +7,8 @@ rs.mock('lodash', () => ({
   find: <T>(arr: T[], fn: (item: T) => boolean): T | undefined => arr.find(fn),
 }))
 
-// Mock @/store/spanStore — use rs.fn for initProvider so it's callable
-rs.mock('@/store/spanStore', () => ({
+// Mock @store/spanStore — use rs.fn for initProvider so it's callable
+rs.mock('@store/spanStore', () => ({
   spanStore: {
     use: {
       provider: () => undefined,
@@ -35,7 +35,7 @@ rs.mock('@/store/spanStore', () => ({
 
 describe('plugin/opencode-tracing', () => {
   it.skip('should return undefined when disabled', async () => {
-    const mod = await import('@/plugin')
+    const mod = await import('@plugin')
     const plugin = mod.default as any
     const ctx = { options: { enabled: false } }
 
@@ -45,7 +45,7 @@ describe('plugin/opencode-tracing', () => {
   })
 
   it.skip('should return a cleanup function when enabled', async () => {
-    const mod = await import('@/plugin')
+    const mod = await import('@plugin')
     const plugin = mod.default as any
     const ctx = { options: { enabled: true } }
 

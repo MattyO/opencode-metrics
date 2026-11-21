@@ -18,8 +18,15 @@ export function createSelectors<S extends StoreApi<unknown>>(
   storeWithSelectors.use = {} as WithSelectors<S>['use']
 
   for (const key of whitelist) {
-    ;(storeWithSelectors.use as Record<string, (...args: unknown[]) => unknown>)[String(key)] = (...args: unknown[]) =>
-      (store.getState()[key] as (...args: unknown[]) => unknown)(...args)
+    const stateValue = store.getState()[key]
+    const selectorKey = String(key)
+    if (typeof stateValue === 'function') {
+      ;(storeWithSelectors.use as Record<string, (...args: unknown[]) => unknown>)[selectorKey] = (
+        ...args: unknown[]
+      ) => (stateValue as (...args: unknown[]) => unknown)(...args)
+    } else {
+      ;(storeWithSelectors.use as Record<string, (...args: unknown[]) => unknown>)[selectorKey] = () => store.getState()[selectorKey]
+    }
   }
 
   return storeWithSelectors

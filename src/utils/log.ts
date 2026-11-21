@@ -1,6 +1,6 @@
 import * as fs from 'node:fs'
 import { inspect } from 'util'
-import { DEBUG_LOG } from '@/plugin/constants'
+import { DEBUG_LOG } from '@plugin/constants'
 
 export function debug(...args: unknown[]): void {
   const line = `[${new Date().toISOString()}] ${args.map((a) => (typeof a === 'object' ? inspect(a, { depth: 3, colors: false }) : String(a))).join(' ')}\n`

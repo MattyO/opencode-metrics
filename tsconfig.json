@@ -10,7 +10,14 @@
     "declaration": false,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@utils/*": ["src/utils/*"],
+      "@plugin/*": ["src/plugin/*"],
+      "@store/*": ["src/store/*"],
+      "@types/*": ["src/types/*"],
+      "@helpers/*": ["src/helpers/*"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]

@@ -8,7 +8,7 @@ import os from 'node:os'
 var testDir: string
 
 // Mock the log path so debug() writes to our temp directory.
-rs.mock('@/plugin/constants', () => {
+rs.mock('@plugin/constants', () => {
   testDir = path.join(os.tmpdir(), 'opencode-tracing-debug-test')
   fs.mkdirSync(testDir, { recursive: true })
   return {
@@ -33,7 +33,7 @@ afterAll(() => {
   fs.rmSync(testDir, { recursive: true, force: true })
 })
 
-import { debug, logError } from '@/utils/log'
+import { debug, logError } from '@utils/log'
 
 // ---------------------------------------------------------------------------
 // debug

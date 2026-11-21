@@ -1,8 +1,8 @@
-import {ALL_EVENTS, SHOW_FULL_DATA} from '@/plugin/constants'
-import { debug, logError } from '@/utils/log'
+import {ALL_EVENTS, SHOW_FULL_DATA} from '@plugin/constants'
+import { debug, logError } from '@utils/log'
 import { inspect } from 'util'
 
-import { getActiveParentSessionSpan } from '@/plugin/spanUtils'
+import { getActiveParentSessionSpan } from '@plugin/spanUtils'
 
 export const pluginEvents: Record<string, {
   types: string[]

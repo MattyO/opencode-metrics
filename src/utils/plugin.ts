@@ -1,6 +1,6 @@
 import * as fs from 'node:fs'
 
-import { logError } from '@/utils/log'
+import { logError } from '@utils/log'
 
 const DEBUG_LOG = '/tmp/opencode-tracing-debug.log'
 

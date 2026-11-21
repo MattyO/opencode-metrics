@@ -17,6 +17,7 @@ export const trace = {
   setSpan: () => {}, setSpanContext: () => {},
   getActiveSpan: () => undefined,
   wrap: () => {}, with: () => {},
+  setGlobalTracerProvider: ()=>{},
 }
 export class Span {
   setAttribute() {} addEvent() {} setStatus() {} addLink() {}

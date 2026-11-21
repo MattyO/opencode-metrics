@@ -3,7 +3,7 @@ import { resourceFromAttributes } from '@opentelemetry/resources'
 import { BasicTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import { Span } from '@opentelemetry/api'
-import { createSelectors } from '@/helpers/store'
+import { createSelectors } from '@helpers/store'
 import {result} from 'lodash'
 
 interface SpanEntry {
@@ -57,7 +57,7 @@ const baseStore = createStore<SpanStore>((set, get) => ({
       ),
     })),
 
-  clear: () => set({ spans: [] }),
+    clear: () => set({ spans: [], provider: undefined, exporter: undefined }),
 
   findSpan: (spanName, lookupInfo = {}) => {
     const { spans } = get()
