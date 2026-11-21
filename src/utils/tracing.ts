@@ -36,7 +36,7 @@ export function setupProvider(
       url: endpoint,
     })
 
-    const resourceAttrs = {
+   const resourceAttrs = {
       ['service.name']: serviceName,
       ['service.version']: '0.1.0',
     }

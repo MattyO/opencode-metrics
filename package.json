@@ -20,7 +20,7 @@
   },
   "scripts": {
     "test": "rstest --reporters verbose",
-    "test:run": "rstest --coverage"
+    "test:coverage": "rstest --coverage"
   },
   "devDependencies": {
     "@rsbuild/core": "^2.3.3",
