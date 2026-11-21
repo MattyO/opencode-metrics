@@ -1,3 +1,5 @@
+import { findOrCreateSpan, flushProvider} from '@/utils/tracing'
+
 export const pairDefinitions= {
     sessions: {
         startTypes: ['session.execution.started'],
@@ -7,11 +9,7 @@ export const pairDefinitions= {
         endTypes: ['session.execution.succeeded', 'session.execution.failed', 'session.execution.interrupted'],
         endEvent: (event) => {
             stopSpan(`session.execution-${event.data.sessionID}`)
-            const provider = useSpanStore.use.provider()
-            provider?.forceFlush().then(
-                () => debug('[opencode-tracing] Flush succeeded after span end'),
-                (err) => debug('[opencode-tracing] Flush FAILED:', err),
-            )
+            flushProvider()
         },
     },
     steps: {

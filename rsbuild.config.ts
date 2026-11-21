@@ -1,7 +1,7 @@
 import { defineConfig } from '@rsbuild/core';
 import { resolve } from 'node:path';
 
-const mocks = resolve(__dirname, 'src/__mocks__');
+const mocks = resolve(__dirname, 'test/__mocks__');
 
 export default defineConfig({
   resolve: {

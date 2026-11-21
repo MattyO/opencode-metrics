@@ -6,9 +6,12 @@ import { Span } from '@opentelemetry/api'
 import { createSelectors } from '@/helpers/store'
 
 interface SpanEntry {
-  sessionName: string
-  sessionId?: string
-  messageId?: string
+  spanName: string
+  type: string
+    lookupInfo?:{
+      sessionId: string
+      messageId: string
+    }
   span: Span
 }
 
@@ -23,6 +26,7 @@ interface SpanStore {
   addSpan: (entry: Omit<SpanEntry, 'span'> & { span: Span }) => void
   removeSpan: (sessionName: string, sessionId?: string, messageId?: string) => void
   clear: () => void
+  findSpan: (spanName?: string, lookupInfo?: { sessionId?: string; messageId?: string }) => SpanEntry | undefined
   initProvider: (resourceAttrs: ProviderAttrs, exporter: OTLPTraceExporter, maxQueueSize?: number, maxExportBatchSize?: number, exportTimeoutMillis?: number) => void
   shutdownProvider: () => Promise<void>
   replaceProvider: (resourceAttrs: ProviderAttrs, exporter: OTLPTraceExporter, maxQueueSize?: number, maxExportBatchSize?: number, exportTimeoutMillis?: number) => Promise<void>
@@ -49,6 +53,19 @@ const baseStore = createStore<SpanStore>((set, get) => ({
     })),
 
   clear: () => set({ spans: [] }),
+
+  findSpan: (spanName, lookupInfo) => {
+    const { spans } = get()
+    return spans.find((entry) => {
+      if (spanName && entry.spanName === spanName) return true
+      if (lookupInfo && entry.lookupInfo) {
+        if (lookupInfo.sessionId && entry.lookupInfo.sessionId === lookupInfo.sessionId) return true
+        if (lookupInfo.messageId && entry.lookupInfo.messageId === lookupInfo.messageId) return true
+      }
+      // Fallback: match any span when no filters provided
+      return spanName === undefined && lookupInfo === undefined
+    })
+  },
 
   initProvider: (resourceAttrs, exporter, maxQueueSize = 100, maxExportBatchSize = 100, exportTimeoutMillis = 5000) => {
     const resource = resourceFromAttributes(resourceAttrs)
@@ -89,4 +106,4 @@ const baseStore = createStore<SpanStore>((set, get) => ({
   },
 }))
 
-export const useSpanStore = createSelectors(baseStore, ['spans', 'provider', 'exporter'])
+export const useSpanStore = createSelectors(baseStore, ['spans', 'provider', 'exporter', 'findSpan', 'removeSpan'  ])

@@ -63,15 +63,46 @@ export function setupProvider(
 }
 
 /**
- * Create a named span, optionally linked to a parent span's context.
+ * Create a named span via the OTel tracer and register it in the span store.
+ *
+ * @param name      - Span name
+ * @param options   - Optional parent span, type, lookup info, and attributes
+ * @returns The newly created Span
  */
-export function createSpan(name: string, parent?: Span): Span {
+export function createSpan(
+  name: string,
+  options: {
+    parent?: Span
+    type: string
+    lookupInfo?: { sessionId: string; messageId: string }
+    attributes?: Record<string, string | number | boolean>
+  } = {},
+): Span {
   const tracer = trace.getTracer('opencode-tracing', '0.1.0')
-  if (parent) {
-    const ctx = trace.setSpan(context.active(), parent)
-    return tracer.startSpan(name, {}, ctx)
+
+  // Build startSpan options — attributes go on the span at creation time
+  const spanOpts: { attributes?: Record<string, string | number | boolean> } = {}
+  if (options.attributes) {
+    spanOpts.attributes = options.attributes
   }
-  return tracer.startSpan(name)
+
+  let span: Span
+  if (options.parent) {
+    const ctx = trace.setSpan(context.active(), options.parent)
+    span = tracer.startSpan(name, spanOpts, ctx)
+  } else {
+    span = tracer.startSpan(name, spanOpts)
+  }
+
+  // Register in the store
+  useSpanStore.getState().addSpan({
+    spanName: name,
+    type: options.type,
+    lookupInfo: options.lookupInfo,
+    span,
+  })
+
+  return span
 }
 
 /**
@@ -91,3 +122,30 @@ export function setSpanAttribute(span: Span | undefined, key: string, value: str
   if (!span || !span.isRecording()) return
   span.setAttribute(key, value)
 }
+
+// ---------------------------------------------------------------------------
+// Span lookup / creation (TBD — relies on other functions to be fixed first)
+// ---------------------------------------------------------------------------
+
+export function findOrCreateSpan(
+  name: string,
+  type: string,
+  lookupInfo: unknown,
+  spanAttributes: Record<string, unknown>,
+): void {
+    let span = store.selectors.findSpan(name, type, lookupInfo)
+    if(!span){
+        span = createSpan(name, type, lookupinfo, attributes)
+   }
+    return span
+}
+
+export function flushProvider(){
+    const provider = useSpanStore.selectors.provider()
+    provider?.forceFlush().then(
+        () => debug('[opencode-tracing] Flush succeeded after span end'),
+        (err) => debug('[opencode-tracing] Flush FAILED:', err),
+    )
+}
+
+
