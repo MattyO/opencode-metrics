@@ -32,6 +32,13 @@ interface SpanStore {
   replaceProvider: (resourceAttrs: ProviderAttrs, exporter: OTLPTraceExporter, maxQueueSize?: number, maxExportBatchSize?: number, exportTimeoutMillis?: number) => Promise<void>
 }
 
+function spanCompare(span, sessionName, lookupinfo){
+    return span.sessionName !== sessionName ||
+          (lookupInfo.sessionId !== undefined && span.sessionId !== lookupInfo.sessionId) ||
+          (lookupInfo.messageId !== undefined && span.messageId !== lookupInfo.messageId)
+
+}
+
 const baseStore = createStore<SpanStore>((set, get) => ({
   spans: [],
   provider: undefined,
@@ -42,13 +49,10 @@ const baseStore = createStore<SpanStore>((set, get) => ({
       spans: [...state.spans, entry],
     })),
 
-  removeSpan: (sessionName, sessionId, messageId) =>
+  removeSpan: (spanName, lookupInfo) =>
     set((state) => ({
-      spans: state.spans.filter(
-        (s) =>
-          s.sessionName !== sessionName ||
-          (sessionId !== undefined && s.sessionId !== sessionId) ||
-          (messageId !== undefined && s.messageId !== messageId),
+      spans: state.spans.filter((s) =>
+          spanCompare(spanName, lookupInfo)
       ),
     })),
 
@@ -56,14 +60,8 @@ const baseStore = createStore<SpanStore>((set, get) => ({
 
   findSpan: (spanName, lookupInfo) => {
     const { spans } = get()
-    return spans.find((entry) => {
-      if (spanName && entry.spanName === spanName) return true
-      if (lookupInfo && entry.lookupInfo) {
-        if (lookupInfo.sessionId && entry.lookupInfo.sessionId === lookupInfo.sessionId) return true
-        if (lookupInfo.messageId && entry.lookupInfo.messageId === lookupInfo.messageId) return true
-      }
-      // Fallback: match any span when no filters provided
-      return spanName === undefined && lookupInfo === undefined
+    spans.find((span) => {
+        spanCompare(span, spanName, lookupInfo)
     })
   },
 
@@ -107,3 +105,4 @@ const baseStore = createStore<SpanStore>((set, get) => ({
 }))
 
 export const useSpanStore = createSelectors(baseStore, ['spans', 'provider', 'exporter', 'findSpan', 'removeSpan'  ])
+//export const useSpanStore = baseStore

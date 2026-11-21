@@ -32,9 +32,7 @@ export function setupProvider(
 
     debug('[opencode-tracing] Creating new OTel provider')
 
-    const existingExporter = store.use.exporter()
-    const ExporterCtor = existingExporter?.constructor ?? OTLPTraceExporter
-    const exporter = new ExporterCtor({
+    const exporter = new OTLPTraceExporter({
       url: endpoint,
     })
 
@@ -95,7 +93,7 @@ export function createSpan(
   }
 
   // Register in the store
-  useSpanStore.getState().addSpan({
+  useSpanStore.selectors.addSpan({
     spanName: name,
     type: options.type,
     lookupInfo: options.lookupInfo,

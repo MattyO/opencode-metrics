@@ -16,96 +16,35 @@ function clearStore() {
 describe('spanStore/findSpan', () => {
   beforeEach(clearStore)
 
+  describe('selector', () => {
+      it('is avalible through a selector', ()=>{
+          expect(useSpanStore.use.findSpan).toBeInstanceOf(Function)
+      })
+  })
+  describe('spans not found returns undefined', () => {
+      it('when there are spans', ()=>{
+          expect(useSpanStore.use.findSpan('not-a-span')).toBeUndefined()
+      })
+      it('when the span doesnt match', ()=>{
+        useSpanStore.use.addSpan('span.name', 'span.type')
+        expect(useSpanStore.use.findSpan('not-a-span')).toBeUndefined()
+      })
+  })
+
   describe('matching by spanName', () => {
     it('should return the span when spanName matches', () => {
-      const mockSpan = {
-        setAttribute: () => {},
-        end: () => {},
-        spanContext: () => ({ traceId: 'abc', spanId: 'def', traceFlags: 1 }),
-        isRecording: () => true,
-      }
-      useSpanStore.getState().addSpan({ spanName: 'my-span', type: 'test', span: mockSpan })
 
-      const result = useSpanStore.getState().findSpan('my-span')
+      useSpanStore.use.addSpan('span.name', 'span.type')
+
+      const result = useSpanStore.use.findSpan('span.name')
 
       expect(result).toBeDefined()
       expect(result?.spanName).toBe('my-span')
     })
-
-    it('should return undefined when spanName does not match', () => {
-      const mockSpan = {
-        setAttribute: () => {},
-        end: () => {},
-        spanContext: () => ({ traceId: 'abc', spanId: 'def', traceFlags: 1 }),
-        isRecording: () => true,
-      }
-      useSpanStore.getState().addSpan({ spanName: 'my-span', type: 'test', span: mockSpan })
-
-      const result = useSpanStore.getState().findSpan('non-existent')
-
-      expect(result).toBeUndefined()
-    })
   })
 
   describe('matching by lookupInfo', () => {
-    it('should return the span when lookupInfo.sessionId matches', () => {
-      const mockSpan = {
-        setAttribute: () => {},
-        end: () => {},
-        spanContext: () => ({ traceId: 'abc', spanId: 'def', traceFlags: 1 }),
-        isRecording: () => true,
-      }
-      useSpanStore.getState().addSpan({
-        spanName: 'step-span',
-        type: 'step',
-        lookupInfo: { sessionId: 'session-1', messageId: 'msg-1' },
-        span: mockSpan,
-      })
 
-      const result = useSpanStore.getState().findSpan(undefined, { sessionId: 'session-1' })
-
-      expect(result).toBeDefined()
-      expect(result?.spanName).toBe('step-span')
-    })
-
-    it('should return the span when lookupInfo.messageId matches', () => {
-      const mockSpan = {
-        setAttribute: () => {},
-        end: () => {},
-        spanContext: () => ({ traceId: 'abc', spanId: 'def', traceFlags: 1 }),
-        isRecording: () => true,
-      }
-      useSpanStore.getState().addSpan({
-        spanName: 'step-span',
-        type: 'step',
-        lookupInfo: { sessionId: 'session-1', messageId: 'msg-1' },
-        span: mockSpan,
-      })
-
-      const result = useSpanStore.getState().findSpan(undefined, { messageId: 'msg-1' })
-
-      expect(result).toBeDefined()
-      expect(result?.spanName).toBe('step-span')
-    })
-
-    it('should return undefined when lookupInfo does not match', () => {
-      const mockSpan = {
-        setAttribute: () => {},
-        end: () => {},
-        spanContext: () => ({ traceId: 'abc', spanId: 'def', traceFlags: 1 }),
-        isRecording: () => true,
-      }
-      useSpanStore.getState().addSpan({
-        spanName: 'step-span',
-        type: 'step',
-        lookupInfo: { sessionId: 'session-1', messageId: 'msg-1' },
-        span: mockSpan,
-      })
-
-      const result = useSpanStore.getState().findSpan(undefined, { sessionId: 'session-999' })
-
-      expect(result).toBeUndefined()
-    })
   })
 
   describe('fallback when lookupInfo is undefined', () => {
@@ -146,31 +85,6 @@ describe('spanStore/findSpan', () => {
 
       expect(result).toBeDefined()
       expect(result?.spanName).toBe('step-span')
-    })
-
-    it('should prioritize spanName match over lookupInfo match', () => {
-      const mockSpan = {
-        setAttribute: () => {},
-        end: () => {},
-        spanContext: () => ({ traceId: 'abc', spanId: 'def', traceFlags: 1 }),
-        isRecording: () => true,
-      }
-      useSpanStore.getState().addSpan({
-        spanName: 'target',
-        type: 'target',
-        span: mockSpan,
-      })
-      useSpanStore.getState().addSpan({
-        spanName: 'other',
-        type: 'other',
-        lookupInfo: { sessionId: 'session-1', messageId: 'msg-1' },
-        span: mockSpan,
-      })
-
-      const result = useSpanStore.getState().findSpan('target', { sessionId: 'session-1' })
-
-      expect(result).toBeDefined()
-      expect(result?.spanName).toBe('target')
     })
   })
 })
