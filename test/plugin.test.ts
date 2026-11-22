@@ -5,27 +5,7 @@ import {createSpanStore} from '@mock-factories/spanStore'
 // Mocks
 // ---------------------------------------------------------------------------
 
-console.log(createSpanStore())
-rs.mock('@store/spanStore', () => ({
-  spanStore: {
-    use: {
-      provider: () => undefined,
-      exporter: () => undefined,
-    },
-    getState: () => ({
-      shutdownProvider: rs.fn().mockResolvedValue(undefined),
-      spans: [],
-      provider: undefined,
-      exporter: undefined,
-    }),
-    initProvider: rs.fn(),
-    shutdownProvider: rs.fn().mockResolvedValue(undefined),
-    addSpan: rs.fn(),
-    removeSpan: rs.fn(),
-    clear: rs.fn(),
-    replaceProvider: rs.fn().mockResolvedValue(undefined),
-  },
-}))
+rs.mock('@store/spanStore', () => (createSpanStore()))
 
 rs.mock('@utils/log', () => ({
   logError: rs.fn(),
