@@ -8,11 +8,12 @@ import {result} from 'lodash'
 
 interface SpanEntry {
   spanName: string
-  type: string
     lookupInfo?:{
-      sessionId: string
-      messageId: string
+      sessionId?: string
+      messageId?: string
+      type?: string
     }
+    attributes: any
   span: Span
 }
 
@@ -33,10 +34,16 @@ interface SpanStore {
   replaceProvider: (resourceAttrs: ProviderAttrs, exporter: OTLPTraceExporter, maxQueueSize?: number, maxExportBatchSize?: number, exportTimeoutMillis?: number) => Promise<void>
 }
 
-function spanCompare(span, spanName, lookupInfo){
-    return (span.spanName === spanName ||
-          (lookupInfo?.sessionId !== undefined && span.sessionId === lookupInfo.sessionId) ||
-          (lookupInfo?.messageId !== undefined && span.messageId === lookupInfo.messageId))
+function spanCompare(spanEntry, spanName, lookupInfo){
+    if(spanName == undefined && lookupInfo?.type == undefined){
+        return false
+    }
+
+    const result = (spanName == undefined || spanEntry.spanName === spanName) &&
+        (lookupInfo?.type == undefined || spanEntry?.lookupInfo?.type === lookupInfo.type) &&
+        (lookupInfo?.sessionId == undefined || spanEntry?.lookupInfo?.sessionId === lookupInfo.sessionId) &&
+        (lookupInfo?.messageId == undefined || spanEntry?.lookupInfo?.messageId === lookupInfo.messageId)
+    return result
 
 }
 

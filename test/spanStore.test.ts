@@ -72,6 +72,7 @@ describe('SpanStore', () => {
         lookupInfo: { sessionId: '456', messageId: '' },
       }))
 
+
       const result = spanStore.use.findSpan('step-span', { sessionId: '123' })
 
       expect(result).toBeDefined()

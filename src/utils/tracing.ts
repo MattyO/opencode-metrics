@@ -84,7 +84,6 @@ export function createSpan(
 
     const spanEntry = {
         spanName: name,
-        type: options.type,
         lookupInfo: options.lookupInfo,
         span: span,
       }
@@ -135,7 +134,13 @@ export function findOrCreateSpan(
     console.log('in find or create span')
     let span = spanStore.use.findSpan(name, lookupInfo)
     if(!span){
-        span = createSpan(name, lookupInfo, attributes)
+        span = createSpan(name, {lookupInfo:lookupInfo, attributes: attributes})
+        spanStore.use.addSpan({
+            spanName: name,
+            lookupInfo: lookupInfo,
+            attributes: attributes,
+            span: span
+        })
    }
     return span
 }
@@ -146,6 +151,13 @@ export function flushProvider(){
         () => debug('[opencode-tracing] Flush succeeded after span end'),
         (err) => debug('[opencode-tracing] Flush FAILED:', err),
     )
+}
+export function getActiveParentSessionSpan (sessionId){
+    return spanStore.use.findSpan(undefined, {
+        sessionID: sessionId,
+        type: 'ai.session.execution'
+
+    })
 }
 
 

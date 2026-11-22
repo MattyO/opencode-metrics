@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, rs } from '@rstest/core'
 import { spanStore } from '@store/spanStore'
-import { createSpan, setupProvider, endSpan, setSpanAttribute, findOrCreateSpan, flushProvider, } from '@utils/tracing'
+import { createSpan, setupProvider, endSpan, setSpanAttribute, findOrCreateSpan, flushProvider, getActiveParentSessionSpan} from '@utils/tracing'
+
+import { createSpanEntry } from '@testHelpers/spanEntry'
 
 import { TracingOptions, ExecutionInfo } from '@types/tracing'
 
@@ -170,24 +172,24 @@ describe('tracing/createSpan', () => {
 
   it('should register the span in the store', () => {
 
-    createSpan('my-span', { type: 'test' })
+    createSpan('my-span', {lookupInfo: {type: 'test'}})
 
     const entry = spanStore.getState().findSpan('my-span')
     expect(entry).toBeDefined()
     expect(entry?.spanName).toBe('my-span')
-    expect(entry?.type).toBe('test')
+    expect(entry?.lookupInfo?.type).toBe('test')
   })
 
   it('should apply attributes to the span', () => {
-    createSpan('attr-span', {
-      type: 'attr-test',
-      attributes: { foo: 'bar', count: 42 },
-    })
+    createSpan('attr-span',
+        {lookupInfo: {type: 'test-type'},
+      attributes: { foo: 'bar', count: 42 }}
+    )
 
-    const entry = spanStore.getState().findSpan('attr-span')
+    //TODO: fix me late.  mock and check that tracer.newSpan was called with attributes
+    const entry = spanStore.use.findSpan('attr-span')
     expect(entry).toBeDefined()
     expect(entry?.spanName).toBe('attr-span')
-    expect(entry?.type).toBe('attr-test')
   })
 
   it('should use parent context when parent span is provided', () => {
@@ -321,3 +323,17 @@ describe('tracing/flushProvider', () => {
 
     })
 })
+
+describe('tracing/getActiveParentSessionSpan', () => {
+    beforeEach(()=>{
+        spanStore.getState().clear()
+    })
+    it('gets the span with the correct type and session id', ()=>{
+        const span = createSpan('my-span', {lookupInfo:{ sessionId: '1234', type: 'ai.session.execution' }})
+        const result = getActiveParentSessionSpan('1234')
+
+        expect(result).toBe(span)
+
+    })
+})
+

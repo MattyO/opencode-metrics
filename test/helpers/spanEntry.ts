@@ -17,8 +17,7 @@ function createMockSpan(overrides?: Partial<Span>): Span {
 
 export interface SpanEntryFactoryOptions {
   spanName?: string
-  type?: string
-  lookupInfo?: { sessionId: string; messageId: string }
+  lookupInfo?: { sessionId?: string; messageId?: string, type?: string, attributes?: any }
   span?: Span
 }
 
@@ -26,7 +25,6 @@ export function createSpanEntry(options: SpanEntryFactoryOptions = {}): ReturnTy
   const { spanName = 'test-span', type = 'test', lookupInfo, span = createMockSpan() } = options
   return {
     spanName,
-    type,
     lookupInfo,
     span,
   }

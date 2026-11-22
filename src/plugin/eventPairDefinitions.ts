@@ -16,29 +16,31 @@ export const pairDefinitions= {
         startTypes: ['session.step.started'],
         startEvent: (event) => {
             const sid = event.data.sessionID as string
-            const parentSpan = getActiveParentSessionSpan(sid)
-            findOrCreateSpan(`session.step${sid}`, undefined, sid, event.data.assistantMessageID, {
-                attributes: {
+            //const parentSpan = getActiveParentSessionSpan(sid)
+            findOrCreateSpan(`session.step${sid}`,
+                {sessionId: sid, messageId: event.data.assistantMessageID},
+                { attributes: {
                     sessionId: sid,
                     type: 'ai.session.execution',
                     agent: event.data.agent,
                     model: event.data.model?.id,
                 },
-                links: parentSpan ? [{ context: parentSpan.span.spanContext() }] : [],
+                //links: parentSpan ? [{ context: parentSpan.span.spanContext() }] : [],
             })
         },
         endTypes: ['session.step.ended'],
         endEvent: (event) => {
             const sid = event.data.sessionID as string
-            const parentSpan = getActiveParentSessionSpan(sid)
-            findOrCreateSpan(`session.step${sid}`, undefined, sid, event.data.assistantMessageID, {
+            //const parentSpan = getActiveParentSessionSpan(sid)
+            findOrCreateSpan(`session.step${sid}`,
+                {sessionId: sid, messageId: event.data.assistantMessageID},
                 attributes: {
                     sessionId: sid,
                     type: 'ai.session.execution',
                     agent: event.data.agent,
                     model: event.data.model?.id,
                 },
-                links: parentSpan ? [{ context: parentSpan.span.spanContext() }] : [],
+                //links: parentSpan ? [{ context: parentSpan.span.spanContext() }] : [],
             })
         },
     },
