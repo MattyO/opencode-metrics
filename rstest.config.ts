@@ -7,7 +7,10 @@ export default defineConfig({
   include: ['test/**/*.test.ts'],
   extends: withRsbuildConfig(),
   resolve: {
-    alias: autoMockMapper('test/__mocks__'),
+    alias: {
+      // auto-mock overrides — these take priority over rsbuild's
+      ...autoMockMapper('test/__mocks__'),
+    },
   },
   coverage: {
     provider: 'v8',

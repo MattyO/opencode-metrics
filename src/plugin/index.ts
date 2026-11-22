@@ -1,6 +1,5 @@
 import { Plugin } from '@opencode/plugin'
 import { trace, Span } from '@opentelemetry/api'
-import { find, filter, flatten } from 'lodash'
 import { inspect } from 'util'
 
 // Minimal context type — @opencode/plugin provides the real one at runtime
@@ -69,7 +68,7 @@ export default Plugin.define({
     // -----------------------------------------------------------------------
 
 
-    const controllers: AbortController[] = flatten([
+    const controllers: AbortController[] = [
       // session.execution.started
 
       Object.entries(pairDefinitions).map(([key, pairDefinition]) => {
@@ -93,7 +92,7 @@ export default Plugin.define({
         })
 
       }),
-    ])
+    ].flat()
 
     // -----------------------------------------------------------------------
     // Cleanup
