@@ -1,9 +1,11 @@
 import { describe, it, expect, rs } from '@rstest/core'
+import {createSpanStore} from '@mock-factories/spanStore'
 
 // ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
 
+console.log(createSpanStore())
 rs.mock('@store/spanStore', () => ({
   spanStore: {
     use: {

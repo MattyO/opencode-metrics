@@ -11,7 +11,7 @@ export default defineConfig({
       '@store/': resolve(src, 'store'),
       '@types/': resolve(src, 'types'),
       '@helpers/': resolve(src, 'helpers'),
-      '@testHelpers': resolve(__dirname, 'test/helpers'),
+
     },
   },
 });
