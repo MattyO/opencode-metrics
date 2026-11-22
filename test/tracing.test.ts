@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, rs } from '@rstest/core'
 import { spanStore } from '@store/spanStore'
-import { createSpan, setupProvider } from '@utils/tracing'
+import { createSpan, setupProvider, endSpan, setSpanAttribute, findOrCreateSpan, flushProvider, } from '@utils/tracing'
 
 import { TracingOptions, ExecutionInfo } from '@types/tracing'
 
@@ -8,9 +8,6 @@ import { TracingOptions, ExecutionInfo } from '@types/tracing'
 // Clear the real store before each test
 // ---------------------------------------------------------------------------
 
-function clearStore() {
-  spanStore.getState().clear()
-}
 
 // ---------------------------------------------------------------------------
 // Import after store is available (OTel API is aliased to mock via rsbuild)
@@ -23,7 +20,10 @@ function clearStore() {
 
 
 describe('tracing/initProvider', () => {
-  beforeEach(clearStore)
+    beforeEach(()=>{
+      spanStore.getState().clear()
+    })
+
     it('calls init provider store selector to create provider', ()=>{
         const spy = rs.spyOn(spanStore.use, 'initProvider')
         const opts: TracingOptions = {
@@ -164,7 +164,9 @@ describe('tracing/initProvider', () => {
 })
 
 describe('tracing/createSpan', () => {
-  beforeEach(clearStore)
+    beforeEach(()=>{
+      spanStore.getState().clear()
+    })
 
   it('should register the span in the store', () => {
 
@@ -214,7 +216,7 @@ describe('tracing/createSpan', () => {
   it('should return the created span', () => {
     const result = createSpan('return-span', { type: 'return' })
     expect(result).toBeDefined()
-    expect(result).toHaveProperty('spanContext')
+    expect(result).toHaveProperty('spanName')
   })
 
   it('should work with no options', () => {
@@ -223,4 +225,99 @@ describe('tracing/createSpan', () => {
     expect(entry).toBeDefined()
     expect(entry?.spanName).toBe('no-options-span')
   })
+})
+
+describe('tracing/endSpan', () => {
+    beforeEach(()=>{
+        spanStore.getState().clear()
+    })
+
+    it('calls end on span entry that is found', () => {
+        createSpan('my-span', { type: 'test' })
+        const spanEntry = spanStore.use.findSpan('my-span')
+        const spy = rs.spyOn(spanEntry.span, 'end')
+
+        endSpan('my-span')
+
+        expect(spy).toHaveBeenCalled()
+    })
+
+    it('doesnt blow up when there are no spans to find', () => {
+        createSpan('my-span', { type: 'test' })
+        const spanEntry = spanStore.use.findSpan('my-span')
+        const spy = rs.spyOn(spanEntry.span, 'end')
+
+        endSpan('not-found')
+
+        expect(spy).not.toHaveBeenCalled()
+    })
+})
+
+describe('tracing/setAttribute', () => {
+    beforeEach(()=>{
+        spanStore.getState().clear()
+    })
+
+    it('calls end on span entry that is found', () => {
+        createSpan('my-span', { type: 'test' })
+        const spanEntry = spanStore.use.findSpan('my-span')
+        const spy = rs.spyOn(spanEntry.span, 'setAttribute')
+
+        setSpanAttribute('my-span', {}, {name: 'attrName', value: 'attrValue'})
+
+        expect(spy).toHaveBeenCalledWith('attrName', 'attrValue')
+    })
+
+    it('doesnt blow up when there are no spans to find', () => {
+        createSpan('my-span', { type: 'test' })
+        const spanEntry = spanStore.use.findSpan('my-span')
+        const spy = rs.spyOn(spanEntry.span, 'setAttribute')
+
+        setSpanAttribute('not-found', {}, {name: 'attrName', value: 'attrValue'})
+
+        expect(spy).not.toHaveBeenCalled()
+    })
+})
+
+describe('tracing/findOrCreateSpan', () => {
+    beforeEach(()=>{
+        spanStore.getState().clear()
+    })
+
+    it('creates span when not found ', () => {
+        const spy = rs.spyOn(spanStore.use, 'addSpan')
+        findOrCreateSpan('my-span')
+        expect(spy).toHaveBeenCalled()
+    })
+
+    it('doesnt create span when one found', () => {
+        const spy = rs.spyOn(spanStore.use, 'addSpan')
+        createSpan('my-span')
+
+        spy.mockClear()
+
+        findOrCreateSpan('my-span')
+        expect(spy).not.toHaveBeenCalled()
+    })
+})
+
+describe('tracing/flushProvider', () => {
+    it('calls flush on the current provider', ()=>{
+        const opts: TracingOptions = {
+          enabled: true,
+          sampleRate: 1,
+        }
+        setupProvider(
+            'http://localhost:4318',
+            'opencode-tracing',
+            opts,
+        )
+
+        const {provider} = spanStore.getState()
+        const spy = rs.spyOn(provider, 'forceFlush')
+        flushProvider()
+        expect(spy).toHaveBeenCalled()
+
+
+    })
 })

@@ -62,12 +62,10 @@ export function setupProvider(
 export function createSpan(
   name: string,
   options: {
-    parent?: Span
-    type: string
     lookupInfo?: { sessionId: string; messageId: string }
     attributes?: Record<string, string | number | boolean>
   } = {},
-): Span {
+) {
   const tracer = trace.getTracer('opencode-tracing', '0.1.0')
 
   // Build startSpan options — attributes go on the span at creation time
@@ -84,33 +82,45 @@ export function createSpan(
     span = tracer.startSpan(name, spanOpts)
   }
 
-  // Register in the store
-  spanStore.use.addSpan({
-    spanName: name,
-    type: options.type,
-    lookupInfo: options.lookupInfo,
-    span,
-  })
+    const spanEntry = {
+        spanName: name,
+        type: options.type,
+        lookupInfo: options.lookupInfo,
+        span: span,
+      }
 
-  return span
+  // Register in the store
+  spanStore.use.addSpan(spanEntry)
+
+  return spanEntry
 }
 
 /**
  * Safely end a span, ignoring if already ended or undefined.
  */
-export function endSpan(span?: Span): void {
-  if (span && !span.isRecording()) {
-    return
-  }
-  span?.end()
+export function endSpan(
+  name: string,
+  lookupInfo: unknown = {}
+): void {
+  let spanEntry = spanStore.use.findSpan(name, lookupInfo)
+  if (!spanEntry) return
+
+  spanEntry.span?.end()
 }
 
 /**
  * Set an attribute on a span, silently skipping if span is undefined or not recording.
  */
-export function setSpanAttribute(span: Span | undefined, key: string, value: string | number | boolean): void {
-  if (!span || !span.isRecording()) return
-  span.setAttribute(key, value)
+export function setSpanAttribute(
+  name: string,
+  lookupInfo: unknown = {},
+  attribute,
+): void {
+
+  let spanEntry = spanStore.use.findSpan(name, lookupInfo)
+  if (!spanEntry) return
+
+  spanEntry.span?.setAttribute(attribute.name, attribute.value)
 }
 
 // ---------------------------------------------------------------------------
@@ -119,13 +129,13 @@ export function setSpanAttribute(span: Span | undefined, key: string, value: str
 
 export function findOrCreateSpan(
   name: string,
-  type: string,
-  lookupInfo: unknown,
-  spanAttributes: Record<string, unknown>,
+  lookupInfo: unknown = {},
+  attributes: Record<string, unknown> ={},
 ): void {
-    let span = store.selectors.findSpan(name, type, lookupInfo)
+    console.log('in find or create span')
+    let span = spanStore.use.findSpan(name, lookupInfo)
     if(!span){
-        span = createSpan(name, type, lookupinfo, attributes)
+        span = createSpan(name, lookupInfo, attributes)
    }
     return span
 }
