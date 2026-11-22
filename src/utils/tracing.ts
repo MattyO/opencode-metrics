@@ -131,7 +131,6 @@ export function findOrCreateSpan(
   lookupInfo: unknown = {},
   attributes: Record<string, unknown> ={},
 ): void {
-    console.log('in find or create span')
     let span = spanStore.use.findSpan(name, lookupInfo)
     if(!span){
         span = createSpan(name, {lookupInfo:lookupInfo, attributes: attributes})

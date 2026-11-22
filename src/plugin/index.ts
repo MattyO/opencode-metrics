@@ -27,10 +27,12 @@ import { spanStore } from '@store/spanStore'
 import { pairDefinitions } from '@plugin/eventPairDefinitions'
 import { pluginEvents } from '@plugin/eventDefinitions'
 
-
 // ---------------------------------------------------------------------------
 // Plugin
 // ---------------------------------------------------------------------------
+
+const seenEvents = new Map<string, number>()
+const SESSION_EXPIRY_MS = 5 * 60 * 1000
 
 export default Plugin.define({
   id: 'opencode-tracing',
@@ -70,7 +72,7 @@ export default Plugin.define({
     const controllers: AbortController[] = flatten([
       // session.execution.started
 
-      pairDefinitions.enteries.map((key, pairDefinition) => {
+      Object.entries(pairDefinitions).map(([key, pairDefinition]) => {
         return eventListenerPair({
           ctx,
           onError: sharedEvents.defaultErrorEvent,
@@ -82,8 +84,8 @@ export default Plugin.define({
 
       }),
 
-      pluginEvents.enteries.map((key, eventDefinition) => {
-        return eventListenerPair({
+      Object.entries(pluginEvents).map(([key, eventDefinition]) => {
+        return eventListener({
           ctx,
           onError: sharedEvents.defaultErrorEvent,
           types: eventDefinition.types,
