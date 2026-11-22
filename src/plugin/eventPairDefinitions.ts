@@ -1,4 +1,4 @@
-import { findOrCreateSpan, flushProvider} from '@utils/tracing'
+import { findOrCreateSpan, flushProvider, endSpan } from '@utils/tracing'
 
 export const pairDefinitions= {
     sessions: {
@@ -8,7 +8,7 @@ export const pairDefinitions= {
         },
         endTypes: ['session.execution.succeeded', 'session.execution.failed', 'session.execution.interrupted'],
         endEvent: (event) => {
-            stopSpan(`session.execution-${event.data.sessionID}`)
+            endSpan(`session.execution-${event.data.sessionID}`)
             flushProvider()
         },
     },
@@ -34,7 +34,7 @@ export const pairDefinitions= {
             //const parentSpan = getActiveParentSessionSpan(sid)
             findOrCreateSpan(`session.step${sid}`,
                 {sessionId: sid, messageId: event.data.assistantMessageID},
-                attributes: {
+                { attributes: {
                     sessionId: sid,
                     type: 'ai.session.execution',
                     agent: event.data.agent,
