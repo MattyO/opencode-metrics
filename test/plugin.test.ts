@@ -1,66 +1,21 @@
 import { describe, it, expect, rs } from '@rstest/core'
-import {createSpanStore} from '@mock-factories/spanStore'
+import { createSpanStore } from '@mock-factories/spanStore'
+import { createUtilsLog } from '@mock-factories/utilsLog'
+import { createUtilsPlugin } from '@mock-factories/utilsPlugin'
+import { createUtilsTracing } from '@mock-factories/utilsTracing'
+import { createPluginEventDefinitions } from '@mock-factories/pluginEventDefinitions'
+import { createPluginEventPairDefinitions } from '@mock-factories/pluginEventPairDefinitions'
 
 // ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
 
-rs.mock('@store/spanStore', () => (createSpanStore()))
-
-rs.mock('@utils/log', () => ({
-  logError: rs.fn(),
-}))
-
-rs.mock('@utils/plugin', () => ({
-  debug: rs.fn(),
-  eventListener: () => ({ abort: rs.fn() }),
-  eventListenerPair: () => [{ abort: rs.fn() }],
-}))
-
-rs.mock('@utils/tracing', () => ({
-  setupProvider: rs.fn(),
-}))
-
-rs.mock('@plugin/eventDefinitions', () => ({
-  sharedEvents: {
-    defaultErrorEvent: (err: unknown) => {
-      if ((err as Error)?.name !== 'AbortError') {
-        console.error(err)
-      }
-    },
-  },
-  pluginEvents: {
-    inboxDelivered: {
-      types: ['session.inbox.delivered'],
-      event: () => {},
-    },
-    debug: {
-      types: ['*', '-session.reasoning.delta', '-session.text.delta', '-session.compaction.delta'],
-      event: () => {},
-    },
-  },
-}))
-
-rs.mock('@plugin/eventPairDefinitions', () => ({
-  pairDefinitions: {
-    sessions: {
-      startTypes: ['session.execution.started'],
-      startEvent: () => {},
-      endTypes: [
-        'session.execution.succeeded',
-        'session.execution.failed',
-        'session.execution.interrupted',
-      ],
-      endEvent: () => {},
-    },
-    steps: {
-      startTypes: ['session.step.started'],
-      startEvent: () => {},
-      endTypes: ['session.step.ended'],
-      endEvent: () => {},
-    },
-  },
-}))
+rs.mock('@store/spanStore', () => ({ spanStore: createSpanStore() }))
+rs.mock('@utils/log', () => ({ logError: createUtilsLog().logError }))
+rs.mock('@utils/plugin', () => createUtilsPlugin())
+rs.mock('@utils/tracing', () => ({ setupProvider: createUtilsTracing().setupProvider }))
+rs.mock('@plugin/eventDefinitions', () => createPluginEventDefinitions())
+rs.mock('@plugin/eventPairDefinitions', () => createPluginEventPairDefinitions())
 
 // ---------------------------------------------------------------------------
 // Tests

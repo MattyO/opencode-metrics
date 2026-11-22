@@ -26,6 +26,7 @@ import { spanStore } from '@store/spanStore'
 import { pairDefinitions } from '@plugin/eventPairDefinitions'
 import { pluginEvents } from '@plugin/eventDefinitions'
 
+
 // ---------------------------------------------------------------------------
 // Plugin
 // ---------------------------------------------------------------------------
@@ -33,11 +34,14 @@ import { pluginEvents } from '@plugin/eventDefinitions'
 const seenEvents = new Map<string, number>()
 const SESSION_EXPIRY_MS = 5 * 60 * 1000
 
+
 export default Plugin.define({
   id: 'opencode-tracing',
 
+
   async setup(ctx: PluginContext) {
     const opts: TracingOptions = {
+
       enabled: true,
       sampleRate: 1,
       ...(ctx.options as Partial<TracingOptions>),
