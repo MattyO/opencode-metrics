@@ -16,12 +16,18 @@ export const pairDefinitions= {
         startTypes: ['session.step.started'],
         startEvent: (event) => {
             const sid = event.data.sessionID as string
+            const lookupInfo =  {
+                sessionId: sid,
+                messageId: event.data.assistantMessageID,
+                type: 'ai.session.step'
+            },
             //const parentSpan = getActiveParentSessionSpan(sid)
-            findOrCreateSpan(`session.step${sid}`,
-                {sessionId: sid, messageId: event.data.assistantMessageID},
+            findOrCreateSpan(`session.step`,
+                lookupInfo
                 { attributes: {
                     sessionId: sid,
-                    type: 'ai.session.execution',
+                    messageId: "event.data.assistantMessageID",
+                    type: 'ai.session.step',
                     agent: event.data.agent,
                     model: event.data.model?.id,
                 },
@@ -31,9 +37,15 @@ export const pairDefinitions= {
         endTypes: ['session.step.ended'],
         endEvent: (event) => {
             const sid = event.data.sessionID as string
+            const lookupInfo =  {
+                sessionId: sid,
+                messageId: event.data.assistantMessageID,
+                type: 'ai.session.step'
+            },
+
             //const parentSpan = getActiveParentSessionSpan(sid)
-            findOrCreateSpan(`session.step${sid}`,
-                {sessionId: sid, messageId: event.data.assistantMessageID},
+            findOrCreateSpan(`session.step`,
+                lookupInfo
                 { attributes: {
                     sessionId: sid,
                     type: 'ai.session.execution',
@@ -42,6 +54,8 @@ export const pairDefinitions= {
                 },
                 //links: parentSpan ? [{ context: parentSpan.span.spanContext() }] : [],
             })
+            endSpan(`session.step`, lookupInfo)
+            flushProvider()
         },
     },
 }

@@ -4,10 +4,10 @@
   "type": "module",
   "description": "OpenCode plugin that traces agent calls, tool calls, and subagent sessions as OpenTelemetry spans sent to Grafana Tempo",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./dist/index.mjs"
   },
   "dependencies": {
-    "@opencode-ai/sdk": "^1.1.42",
+    "@opencode/plugin": "latest",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/exporter-trace-otlp-grpc": "^0.200.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.200.0",
@@ -20,7 +20,10 @@
   },
   "scripts": {
     "test": "rstest --reporters verbose",
-    "test:coverage": "rstest --coverage"
+    "test:coverage": "rstest --coverage",
+    "build": "rsbuild",
+    "ci:build": "rsbuild build",
+    "restart-opencode-server": "opencode service restart"
   },
   "devDependencies": {
     "@rsbuild/core": "^2.3.3",
