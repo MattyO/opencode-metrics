@@ -76,6 +76,7 @@ export function createSpan(
   name: string,
   options: {
     lookupInfo?: { sessionId: string; messageId: string }
+    attributes?: Record<string, string | number | boolean>
     spanOptions?: Record<string, string | number | boolean>
   } = {},
 ) {
@@ -86,7 +87,9 @@ export function createSpan(
 
   // Build startSpan options — attributes go on the span at creation time
   const spanOpts: { attributes?: Record<string, string | number | boolean> } = {}
-  if (options?.spanOptions?.attributes) {
+  if (options?.attributes) {
+    spanOpts.attributes = options.attributes
+  } else if (options?.spanOptions?.attributes) {
     spanOpts.attributes = options.spanOptions.attributes
   }
 
@@ -157,14 +160,15 @@ export function setSpanAttribute(
 export function findOrCreateSpan(
   name: string,
   lookupInfo: unknown = {},
-  attributes: Record<string, unknown> ={},
+  spanOptions: Record<string, unknown> ={},
 ): void {
     debug('in find or create span')
-    debug(`attributes: ${inspect(attributes, {depth: 4})}`)
+    debug(`attributes: ${inspect(spanOptions, {depth: 4})}`)
     let span = spanStore.use.findSpan(name, lookupInfo)
     if(!span){
         debug('span not found creating')
-        const spanEntry = createSpan(name, {lookupInfo:lookupInfo, spanOptions: {attributes: attributes}})
+        const spanEntry = createSpan(name, {lookupInfo: lookupInfo, spanOptions: spanOptions})
+
     }else{
         debug('span found skipping')
     }

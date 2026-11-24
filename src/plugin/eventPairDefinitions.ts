@@ -33,15 +33,17 @@ export const pairDefinitions= {
             const parentSpan = getActiveParentSessionSpan(sid)
             findOrCreateSpan(`session.step`,
                 lookupInfo,
-                { attributes: {
-                    sessionId: sid,
-                    messageId: event.data.assistantMessageID,
-                    type: 'ai.session.step',
-                    agent: event.data.agent,
-                    model: event.data.model?.id,
-                },
-                links: parentSpan ? [{ context: parentSpan.span.spanContext() }] : [],
-            })
+                {
+                    attributes: {
+                        sessionId: sid,
+                        messageId: event.data.assistantMessageID,
+                        type: 'ai.session.step',
+                        agent: event.data.agent,
+                        model: event.data.model?.id,
+                    },
+                    links: parentSpan ? [{ context: parentSpan.span.spanContext() }] : [],
+                }
+            )
 
             debug(`${spanStore.getState()}`)
         },

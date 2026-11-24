@@ -181,13 +181,18 @@ describe('tracing/createSpan', () => {
   })
 
   it('should create a span with the passed attributes', () => {
-    //TODO: mock trace.getTracer to return new mock
+    // Import the module-level mock so we can spy on its startSpan
+    const api = require('@opentelemetry/api')
+    const startSpanSpy = rs.spyOn(api.trace.getTracer(), 'startSpan')
+
     createSpan('attr-span',
         {lookupInfo: {type: 'test-type'},
       attributes: { foo: 'bar', count: 42 }}
     )
 
-      //TODO: assert that tracer mocks was called with spanName, {attributes: { foo: 'bar', count: 42 } }
+    expect(startSpanSpy).toHaveBeenCalledWith('attr-span', {
+      attributes: { foo: 'bar', count: 42 }
+    })
   })
 
   it('should use parent context when parent span is provided', () => {
@@ -299,6 +304,23 @@ describe('tracing/findOrCreateSpan', () => {
         findOrCreateSpan('my-span')
         expect(spy).not.toHaveBeenCalled()
     })
+
+  it('should create a span with the passed attributes', () => {
+
+    // Import the module-level mock so we can spy on its startSpan
+    const api = require('@opentelemetry/api')
+    const startSpanSpy = rs.spyOn(api.trace.getTracer(), 'startSpan')
+
+    findOrCreateSpan('attr-span',
+        {type: 'test-type'},
+        { foo: 'bar', count: 42 }
+    )
+
+    expect(startSpanSpy).toHaveBeenCalledWith('attr-span', {
+      attributes: { foo: 'bar', count: 42 }
+    })
+  })
+
 })
 
 describe('tracing/flushProvider', () => {
