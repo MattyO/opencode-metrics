@@ -3,6 +3,7 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import { TracingOptions } from '@types/tracing'
 import { debug } from '@utils/plugin'
 import { spanStore } from '@store/spanStore'
+import { inspect } from 'util'
 
 // ---------------------------------------------------------------------------
 // Module-level singleton — survives hot-reload (endpoint string only, cheap to recreate)
@@ -30,7 +31,7 @@ export function setupProvider(
             void store.use.shutdownProvider()
         }
 
-        debug('[opencode-tracing] Creating new OTel provider')
+        debug('[opencode-tracing] Creating new OTel provider: ' + endpoint )
 
         const exporter = new OTLPTraceExporter({
             url: endpoint,
@@ -41,9 +42,21 @@ export function setupProvider(
             ['service.version']: '0.1.0',
         }
 
-        debug(`[opencode-tracing] >>> RESOURCE service.name=${serviceName}`)
+        try{
+            debug(`[opencode-tracing] >>> RESOURCE service.name=${serviceName}`)
 
-        store.use.initProvider(resourceAttrs, exporter, opts.maxQueueSize ?? 100, opts.maxExportBatchSize ?? 100, opts.exportTimeoutMillis ?? 5000)
+            store.use.initProvider(resourceAttrs, exporter, opts.maxQueueSize ?? 100, opts.maxExportBatchSize ?? 100, opts.exportTimeoutMillis ?? 5000)
+            debug("after provider")
+            debug(`${inspect(store.use.provider(), {depth: 4})}`)
+            debug(`[opencode-tracing] Exporter config: ${JSON.stringify((store.use.exporter())) }`)
+            debug("after debug provider")
+
+        }catch(err){
+            debug('error debuggin setup provider')
+            debug(err.message)
+
+        }
+
 
     } else {
         debug('[opencode-tracing] Reusing existing OTel provider')
@@ -67,6 +80,11 @@ export function createSpan(
   } = {},
 ) {
   const tracer = trace.getTracer('opencode-tracing', '0.1.0')
+
+  debug("using tracer")
+  debug(`${tracer }`)
+
+  debug(`${inspect(tracer, {depth: 4})}`)
 
   // Build startSpan options — attributes go on the span at creation time
   const spanOpts: { attributes?: Record<string, string | number | boolean> } = {}
@@ -102,9 +120,18 @@ export function endSpan(
   lookupInfo: unknown = {}
 ): void {
   let spanEntry = spanStore.use.findSpan(name, lookupInfo)
-  if (!spanEntry) return
+  if (!spanEntry) {
+    debug(`[opencode-tracing] endSpan: span not found - name=${name}, lookupInfo=${lookupInfo}`)
+    return
+  }
+  debug(`[opencode-tracing] endSpan: ending span - name=${name}`)
+  spanEntry.span.end()
+  flushProvider()
 
-  spanEntry.span?.end()
+  debug(`[opencode-tracing] removing span name=${name}`)
+  debug(`[opencode-tracing] store: ${spanStore.getState().spans.length} spans`)
+  spanStore.use.removeSpan(name, lookupInfo)
+  debug(`[opencode-tracing] store: ${spanStore.getState().spans.length} spans`)
 }
 
 /**
@@ -131,17 +158,14 @@ export function findOrCreateSpan(
   lookupInfo: unknown = {},
   attributes: Record<string, unknown> ={},
 ): void {
+    debug('in find or create span')
     let span = spanStore.use.findSpan(name, lookupInfo)
     if(!span){
-        span = createSpan(name, {lookupInfo:lookupInfo, attributes: attributes})
-        spanStore.use.addSpan({
-            spanName: name,
-            lookupInfo: lookupInfo,
-            attributes: attributes,
-            span: span
-        })
-   }
-    return span
+        debug('span not found creating')
+        const spanEntry = createSpan(name, {lookupInfo:lookupInfo, attributes: attributes})
+    }else{
+        debug('span found skipping')
+    }
 }
 
 export function flushProvider(){
@@ -153,7 +177,7 @@ export function flushProvider(){
 }
 export function getActiveParentSessionSpan (sessionId){
     return spanStore.use.findSpan(undefined, {
-        sessionID: sessionId,
+        sessionId: sessionId,
         type: 'ai.session.execution'
 
     })

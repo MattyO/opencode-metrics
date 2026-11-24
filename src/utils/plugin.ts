@@ -45,7 +45,11 @@ export function eventListener(options: EventListenerOptions): AbortController {
       })) {
 
         if (blacklistedEvents.has(event.type)) continue
-        await options.onEvent(event)
+          try{
+            await options.onEvent(event)
+          }catch(err){
+              debug("error while running event callback:", String(err), (err as Error)?.stack)
+          }
       }
     } catch (err) {
       if ((err as Error)?.name !== 'AbortError') {

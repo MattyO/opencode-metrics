@@ -22,7 +22,7 @@ export const pluginEvents: Record<string, {
         event: (event) => {
           debug(`[opencode-tracing] EVENT type=${event.type}`)
           if (new Set(SHOW_FULL_DATA).has(event.type)) {
-            debug(`[opencode-tracing] ${event.type} EVENT data=${inspect(event, { depth: 3, colors: true })}`)
+            //debug(`[opencode-tracing] ${event.type} EVENT data=${inspect(event, { depth: 3, colors: true })}`)
           }
         },
     }

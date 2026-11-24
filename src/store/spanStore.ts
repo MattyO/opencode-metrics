@@ -2,7 +2,7 @@ import { createStore } from 'zustand/vanilla'
 import { resourceFromAttributes } from '@opentelemetry/resources'
 import { BasicTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
-import { Span } from '@opentelemetry/api'
+import { Span, trace  } from '@opentelemetry/api'
 import { createSelectors } from '@helpers/store'
 import {result} from 'lodash'
 
@@ -85,6 +85,8 @@ const baseStore = createStore<SpanStore>((set, get) => ({
         }),
       ],
     })
+    trace.setGlobalTracerProvider(provider)
+    debug(`${inspect(store.use.provider(), {depth: 4})}`)
     set({ provider, exporter })
   },
 

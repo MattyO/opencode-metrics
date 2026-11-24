@@ -3,13 +3,13 @@ import { BasicTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trac
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
-import { createOpencodeClient } from "@opencode-ai/sdk"
+//import { createOpencodeClient } from "@opencode-ai/sdk"
 import { inspect } from 'util';
 
 
-const client = createOpencodeClient({
-  baseUrl: "http://localhost:4096",
-})
+//const client = createOpencodeClient({
+//  baseUrl: "http://localhost:4096",
+//})
 
 async function test() {
   console.log('Creating OTLP HTTP exporter to http://10.0.20.18:4318/v1/traces...');

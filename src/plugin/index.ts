@@ -96,17 +96,22 @@ export default Plugin.define({
         })
 
       }),
-    ].flat()
+    ].flat(Infinity)
 
     // -----------------------------------------------------------------------
     // Cleanup
     // -----------------------------------------------------------------------
 
     return async () => {
+        try{
       debug('[opencode-tracing] Shutdown — flushing spans...')
       controllers.forEach((c) => c.abort())
       clearInterval(cleanupTimer)
       await spanStore.getState().shutdownProvider()
+        }catch(err){
+          debug('[opencode-tracing] error while trying to shutdown')
+          debug(err)
+        }
     }
   },
 })
