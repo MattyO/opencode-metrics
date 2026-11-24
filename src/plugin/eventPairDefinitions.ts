@@ -8,7 +8,7 @@ export const pairDefinitions= {
         startEvent: (event) => {
             debug(`[opencode-tracing] start: session.execution.started, sessionID=${event.data.sessionID}`)
             const lookupInfo = { sessionId: event.data.sessionID, type: 'ai.session.execution' }
-            findOrCreateSpan(`session.execution`, lookupInfo )
+            findOrCreateSpan(`session.execution`, lookupInfo, lookupInfo )
         },
         endTypes: ['session.execution.succeeded', 'session.execution.failed', 'session.execution.interrupted'],
         endEvent: (event) => {
@@ -43,8 +43,6 @@ export const pairDefinitions= {
                 links: parentSpan ? [{ context: parentSpan.span.spanContext() }] : [],
             })
 
-            debug('after create new spas')
-            debug(`[opencode-tracing] store: ${spanStore.getState().spans.length} spans`)
             debug(`${spanStore.getState()}`)
         },
         endTypes: ['session.step.ended'],

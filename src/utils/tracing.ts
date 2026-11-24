@@ -76,23 +76,22 @@ export function createSpan(
   name: string,
   options: {
     lookupInfo?: { sessionId: string; messageId: string }
-    attributes?: Record<string, string | number | boolean>
+    spanOptions?: Record<string, string | number | boolean>
   } = {},
 ) {
+  debug(`createSpan.options: ${inspect(options, {depth: 4})}`)
+  debug(`[opencode-tracing] createSpan (before create) spans.length: ${spanStore.getState().spans.length} spans`)
   const tracer = trace.getTracer('opencode-tracing', '0.1.0')
 
-  debug("using tracer")
-  debug(`${tracer }`)
-
-  debug(`${inspect(tracer, {depth: 4})}`)
 
   // Build startSpan options — attributes go on the span at creation time
   const spanOpts: { attributes?: Record<string, string | number | boolean> } = {}
-  if (options.attributes) {
-    spanOpts.attributes = options.attributes
+  if (options?.spanOptions?.attributes) {
+    spanOpts.attributes = options.spanOptions.attributes
   }
 
   let span: Span
+  debug(`options: ${inspect(spanOpts, {depth: 4})}`)
   if (options.parent) {
     const ctx = trace.setSpan(context.active(), options.parent)
     span = tracer.startSpan(name, spanOpts, ctx)
@@ -108,6 +107,8 @@ export function createSpan(
 
   // Register in the store
   spanStore.use.addSpan(spanEntry)
+
+  debug(`[opencode-tracing] createSpan (after create) spans.length: ${spanStore.getState().spans.length} spans`)
 
   return spanEntry
 }
@@ -159,10 +160,11 @@ export function findOrCreateSpan(
   attributes: Record<string, unknown> ={},
 ): void {
     debug('in find or create span')
+    debug(`attributes: ${inspect(attributes, {depth: 4})}`)
     let span = spanStore.use.findSpan(name, lookupInfo)
     if(!span){
         debug('span not found creating')
-        const spanEntry = createSpan(name, {lookupInfo:lookupInfo, attributes: attributes})
+        const spanEntry = createSpan(name, {lookupInfo:lookupInfo, spanOptions: {attributes: attributes}})
     }else{
         debug('span found skipping')
     }

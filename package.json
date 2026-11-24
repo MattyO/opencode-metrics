@@ -20,7 +20,7 @@
   },
   "scripts": {
     "test": "rstest --reporters verbose",
-    "test:coverage": "rstest --coverage",
+    "test:coverage": "rstest --reporters verbose --coverage",
     "build": "rsbuild",
     "ci:build": "rsbuild build",
     "restart-opencode-server": "opencode service restart"

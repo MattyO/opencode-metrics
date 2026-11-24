@@ -86,7 +86,6 @@ const baseStore = createStore<SpanStore>((set, get) => ({
       ],
     })
     trace.setGlobalTracerProvider(provider)
-    debug(`${inspect(store.use.provider(), {depth: 4})}`)
     set({ provider, exporter })
   },
 
